@@ -95,7 +95,8 @@ const StockDetail = () => {
       type: 'line',
       height: 400,
       style: {
-        fontFamily: 'Inter, Roboto, sans-serif'
+        fontFamily: 'Inter, Roboto, sans-serif',
+        cursor: 'pointer'  // Set default cursor for chart area
       },
       animation: {
         duration: 500
@@ -174,9 +175,11 @@ const StockDetail = () => {
         },
         states: {
           hover: {
-            lineWidth: 2
+            lineWidth: 2,
+            cursor: 'pointer'  // Set cursor for hover state
           }
         },
+        cursor: 'pointer',  // Set cursor for series
         point: {
           events: {
             click: function() {
