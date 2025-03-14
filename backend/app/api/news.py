@@ -9,13 +9,13 @@ from datetime import datetime
 router = APIRouter()
 
 @router.get("/stocks/{symbol}/news")
-async def get_stock_news_endpoint(symbol: str, period: str = "7d", db: Session = Depends(get_db)):
+async def get_stock_news_endpoint(symbol: str, period: str = "7d", date: str = None, db: Session = Depends(get_db)):
     stock = db.query(Stock).filter(Stock.symbol == symbol).first()
     if not stock:
         raise HTTPException(status_code=404, detail="Stock not found")
     
     # Get news data from the service
-    news_data = get_stock_news(symbol, period)
+    news_data = get_stock_news(symbol, period, date)
     
     # Handle different response statuses
     if news_data["status"] == "error":

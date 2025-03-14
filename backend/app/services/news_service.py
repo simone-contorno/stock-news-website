@@ -7,7 +7,7 @@ from ..core.config import settings
 
 logger = logging.getLogger(__name__)
 
-def get_stock_news(symbol: str, period: str = '7d') -> Dict[str, Any]:
+def get_stock_news(symbol: str, period: str = '7d', date: str = None) -> Dict[str, Any]:
     # Validate API key
     if not settings.NEWS_API_KEY:
         logger.error("NEWS_API_KEY not configured in settings")
@@ -36,8 +36,23 @@ def get_stock_news(symbol: str, period: str = '7d') -> Dict[str, Any]:
         warning_message = 'Only showing news from the last 20 days due to API limitations.'
 
     # Format dates for the API in UTC
-    end_date = datetime.utcnow()
-    start_date = end_date - timedelta(days=days)
+    if date:
+        # If a specific date is provided, fetch news for that day
+        try:
+            specific_date = datetime.strptime(date, '%Y-%m-%d')
+            end_date = specific_date + timedelta(days=1)  # Include the entire day
+            start_date = specific_date
+            logger.info(f"Fetching news for specific date: {date}")
+        except ValueError:
+            logger.error(f"Invalid date format: {date}")
+            return {
+                "status": "error",
+                "message": "Invalid date format. Please use YYYY-MM-DD format."
+            }
+    else:
+        # Otherwise use the period
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
 
     # Prepare API request parameters
     params = {

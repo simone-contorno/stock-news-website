@@ -20,5 +20,11 @@ class Settings:
     NEWS_API_BASE_URL: str = "https://newsapi.org/v2/everything"
     NEWS_API_MAX_RETRIES: int = 1
     NEWS_API_TIMEOUT: int = 10
+    
+    # Together AI Configuration
+    TOGETHER_API_KEY: str = os.getenv('TOGETHER_API_KEY')
+    TOGETHER_API_BASE_URL: str = "https://api.together.xyz/v1/completions"
+    TOGETHER_API_MODEL: str = "mistralai/Mixtral-8x7B-Instruct-v0.1"
+    TOGETHER_API_TIMEOUT: int = 30
 
 settings = Settings()

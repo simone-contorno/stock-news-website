@@ -9,6 +9,7 @@ import offlineExporting from 'highcharts/modules/offline-exporting'
 import { fetchStockPrices } from '../store/stocksSlice'
 import TimeRangeSelector from '../components/TimeRangeSelector'
 import NewsSection from '../components/NewsSection'
+import NewsSummary from '../components/NewsSummary'
 
 // Initialize Highcharts modules
 exporting(Highcharts)
@@ -26,6 +27,9 @@ const StockDetail = () => {
   const [news, setNews] = useState([])
   const [newsWarning, setNewsWarning] = useState('')
   const [newsError, setNewsError] = useState(false)
+  const [newsSummary, setNewsSummary] = useState(null)
+  const [summaryLoading, setSummaryLoading] = useState(false)
+  const [summaryError, setSummaryError] = useState(null)
   const stockPrices = useSelector((state) => state.stocks.prices[symbol]?.[selectedPeriod])
   const pricesStatus = useSelector((state) => state.stocks.pricesStatus[symbol]?.[selectedPeriod])
   const pricesError = useSelector((state) => state.stocks.pricesError[symbol]?.[selectedPeriod])
@@ -69,30 +73,94 @@ const StockDetail = () => {
         // We don't set any state here that would prevent rendering the chart
       })
   }, [symbol, selectedPeriod])
+  
+  // Fetch news summary and analysis
+  useEffect(() => {
+    setSummaryLoading(true)
+    setSummaryError(null)
+    setNewsSummary(null)
+    
+    fetch(`http://localhost:8000/api/stocks/${symbol}/news-summary?period=${selectedPeriod}`)
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 429) {
+            setSummaryError('API rate limit reached. Please try again later.')
+            return Promise.reject('Rate limit reached')
+          } else {
+            return response.json().then(errorData => {
+              setSummaryError(errorData.detail || 'An error occurred while generating the news summary')
+              return Promise.reject(errorData.detail || 'Error generating summary')
+            })
+          }
+        }
+        return response.json()
+      })
+      .then(data => {
+        if (data.status === 'success' && data.data) {
+          setNewsSummary(data.data)
+        } else {
+          setSummaryError('Failed to generate news summary')
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching news summary:', error)
+      })
+      .finally(() => {
+        setSummaryLoading(false)
+      })
+  }, [symbol, selectedPeriod])
 
   const fetchNewsForDate = async (date) => {
     try {
       const formattedDate = date.toISOString().split('T')[0];
-      const response = await fetch(`http://localhost:8000/api/stocks/${symbol}/news?date=${formattedDate}`);
       
-      if (!response.ok) {
-        if (response.status === 429) {
+      // Fetch news for the selected date
+      const newsResponse = await fetch(`http://localhost:8000/api/stocks/${symbol}/news?date=${formattedDate}`);
+      
+      if (!newsResponse.ok) {
+        if (newsResponse.status === 429) {
           setNewsWarning('Daily news rate limit reached.');
           setNewsError(true);
           return;
         }
-        const errorData = await response.json();
+        const errorData = await newsResponse.json();
         setNewsWarning(errorData.detail || 'An error occurred while fetching news');
         setNewsError(true);
         return;
       }
 
-      const data = await response.json();
-      setNews(data.data || []);
-      setNewsWarning(data.warning || '');
+      const newsData = await newsResponse.json();
+      setNews(newsData.data || []);
+      setNewsWarning(newsData.warning || '');
+      
+      // Fetch news summary for the selected date
+      setSummaryLoading(true);
+      setSummaryError(null);
+      
+      const summaryResponse = await fetch(`http://localhost:8000/api/stocks/${symbol}/news-summary?date=${formattedDate}`);
+      
+      if (!summaryResponse.ok) {
+        if (summaryResponse.status === 429) {
+          setSummaryError('API rate limit reached. Please try again later.');
+        } else {
+          const errorData = await summaryResponse.json();
+          setSummaryError(errorData.detail || 'An error occurred while generating the news summary');
+        }
+      } else {
+        const summaryData = await summaryResponse.json();
+        if (summaryData.status === 'success' && summaryData.data) {
+          setNewsSummary(summaryData.data);
+        } else {
+          setSummaryError('Failed to generate news summary');
+        }
+      }
+      
+      setSummaryLoading(false);
     } catch (error) {
-      console.error('Error fetching news for date:', error);
+      console.error('Error fetching data for date:', error);
       setNewsWarning('Failed to fetch news for selected date');
+      setSummaryError('Failed to generate news summary');
+      setSummaryLoading(false);
     }
   };
 
@@ -284,6 +352,14 @@ const StockDetail = () => {
               </>
             )}
           </Paper>
+          
+          <NewsSummary 
+            symbol={symbol}
+            period={selectedPeriod}
+            isLoading={summaryLoading}
+            error={summaryError}
+            data={newsSummary}
+          />
           
           <NewsSection news={news} warning={newsWarning} selectedDate={selectedDate} />
         </Box>
