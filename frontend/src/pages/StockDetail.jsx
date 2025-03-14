@@ -4,9 +4,15 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Box, Typography, Paper, CircularProgress, Alert, Container, Fade } from '@mui/material'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
+import exporting from 'highcharts/modules/exporting'
+import offlineExporting from 'highcharts/modules/offline-exporting'
 import { fetchStockPrices } from '../store/stocksSlice'
 import TimeRangeSelector from '../components/TimeRangeSelector'
 import NewsSection from '../components/NewsSection'
+
+// Initialize Highcharts modules
+exporting(Highcharts)
+offlineExporting(Highcharts)
 
 const StockDetail = () => {
   const { symbol } = useParams()
@@ -188,6 +194,31 @@ const StockDetail = () => {
               fetchNewsForDate(date);
             }
           }
+        }
+      }
+    },
+    exporting: {
+      enabled: true,
+      menuItemDefinitions: {
+        downloadPNG: {
+          text: 'Download PNG'
+        },
+        downloadPDF: {
+          text: 'Download PDF'
+        },
+        downloadSVG: {
+          text: 'Download SVG'
+        },
+        downloadCSV: {
+          text: 'Download CSV'
+        },
+        printChart: {
+          text: 'Print Chart'
+        }
+      },
+      buttons: {
+        contextButton: {
+          menuItems: ['downloadPNG', 'downloadPDF', 'downloadSVG', 'downloadCSV', 'printChart']
         }
       }
     },
