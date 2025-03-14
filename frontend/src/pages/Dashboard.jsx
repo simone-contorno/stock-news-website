@@ -2,18 +2,27 @@ import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { Container, Grid, Card, CardContent, Typography, Box, Paper } from '@mui/material'
-import { fetchStocks } from '../store/stocksSlice'
+import { fetchStocks, fetchStockPrices } from '../store/stocksSlice'
 import Carousel from 'react-material-ui-carousel'
+import TrendingUpIcon from '@mui/icons-material/TrendingUp'
+import TrendingDownIcon from '@mui/icons-material/TrendingDown'
 
 const Dashboard = () => {
   const dispatch = useDispatch()
   const { list: stocks, status, error } = useSelector((state) => state.stocks)
+  const prices = useSelector((state) => state.stocks.prices)
 
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchStocks())
     }
-  }, [status, dispatch])
+    // Fetch initial prices for all stocks
+    stocks.forEach(stock => {
+      if (!prices[stock.symbol]) {
+        dispatch(fetchStockPrices({ symbol: stock.symbol, period: '7d' }))
+      }
+    })
+  }, [status, dispatch, stocks, prices])
 
   if (status === 'loading') {
     return <Typography>Loading...</Typography>
@@ -21,6 +30,21 @@ const Dashboard = () => {
 
   if (status === 'failed') {
     return <Typography color="error">{error}</Typography>
+  }
+
+  const getStockChange = (symbol) => {
+    const stockPrices = prices[symbol]?.['7d'] || []
+    if (stockPrices.length >= 2) {
+      const latest = parseFloat(stockPrices[stockPrices.length - 1].close)
+      const previous = parseFloat(stockPrices[stockPrices.length - 2].close)
+      const change = ((latest - previous) / previous) * 100
+      return {
+        value: change.toFixed(2),
+        isPositive: change > 0,
+        color: change > 0 ? 'success.main' : change < 0 ? 'error.main' : 'text.secondary'
+      }
+    }
+    return null
   }
 
   return (
@@ -44,22 +68,36 @@ const Dashboard = () => {
           interval={5000}
           sx={{ minHeight: '100px' }}
         >
-          {stocks.map((stock) => (
-            <Box
-              key={stock.symbol}
-              sx={{
-                textAlign: 'center',
-                p: 2
-              }}
-            >
-              <Typography variant="h4" gutterBottom>
-                {stock.symbol}
-              </Typography>
-              <Typography variant="h6" sx={{ color: 'text.secondary' }}>
-                {stock.name}
-              </Typography>
-            </Box>
-          ))}
+          {stocks.map((stock) => {
+            const change = getStockChange(stock.symbol)
+            return (
+              <Box
+                key={stock.symbol}
+                sx={{
+                  textAlign: 'center',
+                  p: 2
+                }}
+              >
+                <Typography variant="h4" gutterBottom>
+                  {stock.symbol}
+                </Typography>
+                <Typography variant="h6" sx={{ color: 'text.secondary' }}>
+                  {stock.name}
+                </Typography>
+                {change && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                    {change.isPositive ? 
+                      <TrendingUpIcon sx={{ color: change.color }} /> : 
+                      <TrendingDownIcon sx={{ color: change.color }} />
+                    }
+                    <Typography sx={{ color: change.color }}>
+                      {change.value}%
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            )
+          })}
         </Carousel>
       </Paper>
 
