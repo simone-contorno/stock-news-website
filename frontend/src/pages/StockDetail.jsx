@@ -167,7 +167,7 @@ const StockDetail = () => {
       },
       formatter: function() {
         const date = new Date(this.x);
-        date.setDate(date.getDate() + 1); // Add one day to fix tooltip date display
+        date.setDate(date.getDate()+1); // Keep this adjustment for tooltip only
         return `<b>${symbol.replace('^', ' ')}</b><br/>
                 Date: ${Highcharts.dateFormat('%Y-%m-%d', date)}<br/>
                 Price: $${this.y.toFixed(2)}`;
@@ -226,8 +226,7 @@ const StockDetail = () => {
       name: symbol.replace('^', ''),
       data: stockPrices ? stockPrices.map(price => {
         const date = new Date(price.timestamp);
-        // Add one day to fix the offset
-        date.setDate(date.getDate() + 1);
+        date.setDate(date.getDate());
         return [
           date.getTime(),
           parseFloat(price.close)
