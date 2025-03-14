@@ -56,19 +56,44 @@ def generate_news_summary(symbol: str, news_articles: List[Dict[str, Any]], pric
     
     # Construct the prompt for the AI
     prompt = f"""
-You are a financial analyst assistant. Based on the following news articles about {symbol} stock and its price data, please:
+You are a financial analyst assistant. Based on the following news articles about {symbol.replace("^","")} stock and its price data, create a structured, professional analysis with proper HTML formatting for web display.
 
-1. Provide a concise summary of key events (2-3 paragraphs)
-2. Analyze how these news events correlate with the observed price trend
-3. Highlight the most significant news that likely impacted the stock price
+Format your response using the following HTML structure:
 
-Stock: {symbol}
+<div class="news-summary-section">
+  <h2>News Summary</h2>
+  <ul>
+    <li><span class="sentiment-indicator positive">●</span> Key news point 1</li>
+    <li><span class="sentiment-indicator negative">●</span> Key news point 2</li>
+    <!-- Add more bullet points as needed -->
+  </ul>
+</div>
+
+<div class="price-correlation-section">
+  <h2>Price Correlation</h2>
+  <ul>
+    <li><span class="correlation-indicator positive">●</span> Correlation point 1</li>
+    <li><span class="correlation-indicator negative">●</span> Correlation point 2</li>
+    <!-- Add more bullet points as needed -->
+  </ul>
+</div>
+
+<div class="trend-prediction-section">
+  <h2>Trend Prediction</h2>
+  <ul>
+    <li><span class="prediction-indicator positive">●</span> Future scenario or factor 1</li>
+    <li><span class="prediction-indicator negative">●</span> Future scenario or factor 2</li>
+    <!-- Add more bullet points as needed -->
+  </ul>
+</div>
+
+Stock: {symbol.replace("^","")}
 Price Change: {price_change_percent:.2f}% (${price_change:.2f})
 
 News Articles:
 {news_text}
 
-Your analysis should be factual, balanced, and focus on the relationship between news and price movements.
+Your analysis should be factual, balanced, and focus only on the relationship between news and price movements. Do not include any disclaimers, introductions, or conclusions - just the three HTML-formatted sections above. Ensure all HTML tags are properly closed and formatted.
 """
     
     # Prepare the API request
@@ -79,7 +104,9 @@ Your analysis should be factual, balanced, and focus on the relationship between
     
     data = {
         "model": settings.TOGETHER_API_MODEL,
-        "prompt": prompt,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
         "max_tokens": 1000,
         "temperature": 0.7,
         "top_p": 0.9,
@@ -100,21 +127,26 @@ Your analysis should be factual, balanced, and focus on the relationship between
         result = response.json()
         
         if 'choices' in result and len(result['choices']) > 0:
-            summary_text = result['choices'][0]['text'].strip()
+            # For chat completions API, the response format is different
+            # The response contains 'message' with 'content' instead of 'text'
+            if 'message' in result['choices'][0] and 'content' in result['choices'][0]['message']:
+                summary_text = result['choices'][0]['message']['content'].strip()
+            elif 'text' in result['choices'][0]:
+                summary_text = result['choices'][0]['text'].strip()
+            else:
+                logger.error(f"Unexpected API response format: {result}")
+                return {
+                    "status": "error",
+                    "message": "Failed to generate summary: Could not find content in API response"
+                }
             
-            # Split the summary into sections
-            sections = summary_text.split('\n\n')
-            
-            # Extract summary and analysis (basic parsing)
-            summary = sections[0] if sections else ""
-            analysis = "\n\n".join(sections[1:]) if len(sections) > 1 else ""
+            # Use the full response without any filtering
+            formatted_text = summary_text
             
             return {
                 "status": "success",
                 "data": {
-                    "summary": summary,
-                    "analysis": analysis,
-                    "full_text": summary_text
+                    "formatted_text": formatted_text
                 }
             }
         else:

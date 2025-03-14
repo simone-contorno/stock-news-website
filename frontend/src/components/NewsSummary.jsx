@@ -1,6 +1,7 @@
 import React from 'react'
 import { Box, Typography, Paper, CircularProgress, Alert, Divider } from '@mui/material'
 import { Analytics as AnalyticsIcon, Lightbulb as LightbulbIcon } from '@mui/icons-material'
+import './NewsSummary.css'
 
 const NewsSummary = ({ symbol, period, isLoading = false, error = null, data = null }) => {
   return (
@@ -47,26 +48,10 @@ const NewsSummary = ({ symbol, period, isLoading = false, error = null, data = n
         </Alert>
       ) : (
         <Box>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <LightbulbIcon fontSize="small" sx={{ color: 'primary.main' }} />
-              Key Events Summary
-            </Typography>
-            <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-              {data.summary}
-            </Typography>
-          </Box>
-
-          <Divider sx={{ my: 3 }} />
-
           <Box>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <AnalyticsIcon fontSize="small" sx={{ color: 'primary.main' }} />
-              Price-News Correlation Analysis
-            </Typography>
-            <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-              {data.analysis}
-            </Typography>
+            <Box>
+              <div dangerouslySetInnerHTML={{ __html: data.formatted_text }} />
+            </Box>
           </Box>
         </Box>
       )}

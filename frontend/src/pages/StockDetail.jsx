@@ -27,19 +27,36 @@ const StockDetail = () => {
   const [news, setNews] = useState([])
   const [newsWarning, setNewsWarning] = useState('')
   const [newsError, setNewsError] = useState(false)
+  const [newsLoading, setNewsLoading] = useState(false)
   const [newsSummary, setNewsSummary] = useState(null)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [summaryError, setSummaryError] = useState(null)
+  const [chartLoaded, setChartLoaded] = useState(false)
+  const [newsLoaded, setNewsLoaded] = useState(false)
   const stockPrices = useSelector((state) => state.stocks.prices[symbol]?.[selectedPeriod])
   const pricesStatus = useSelector((state) => state.stocks.pricesStatus[symbol]?.[selectedPeriod])
   const pricesError = useSelector((state) => state.stocks.pricesError[symbol]?.[selectedPeriod])
 
   useEffect(() => {
+    setChartLoaded(false)
     dispatch(fetchStockPrices({ symbol, period: selectedPeriod }))
   }, [dispatch, symbol, selectedPeriod])
+  
+  // Monitor when chart data is loaded
+  useEffect(() => {
+    if (pricesStatus === 'succeeded' && stockPrices && stockPrices.length > 0) {
+      setChartLoaded(true)
+    }
+  }, [pricesStatus, stockPrices])
 
   useEffect(() => {
+    // Only fetch news after chart is loaded
+    if (!chartLoaded) return;
+    
     setNewsError(false)
+    setNewsLoading(true)
+    setNewsLoaded(false)
+    
     fetch(`http://localhost:8000/api/stocks/${symbol}/news?period=${selectedPeriod}`)
       .then(response => {
         if (!response.ok) {
@@ -67,15 +84,22 @@ const StockDetail = () => {
           setNews(data)
           setNewsWarning('')
         }
+        setNewsLoaded(true)
       })
       .catch(error => {
         console.error('Error fetching news:', error)
         // We don't set any state here that would prevent rendering the chart
       })
-  }, [symbol, selectedPeriod])
+      .finally(() => {
+        setNewsLoading(false)
+      })
+  }, [symbol, selectedPeriod, chartLoaded])
   
-  // Fetch news summary and analysis
+  // Fetch news summary and analysis after news is loaded
   useEffect(() => {
+    // Only fetch AI summary after news is loaded
+    if (!newsLoaded) return;
+    
     setSummaryLoading(true)
     setSummaryError(null)
     setNewsSummary(null)
@@ -108,34 +132,45 @@ const StockDetail = () => {
       .finally(() => {
         setSummaryLoading(false)
       })
-  }, [symbol, selectedPeriod])
+  }, [symbol, selectedPeriod, newsLoaded])
 
   const fetchNewsForDate = async (date) => {
     try {
       const formattedDate = date.toISOString().split('T')[0];
       
-      // Fetch news for the selected date
+      // First, fetch news for the selected date
+      setNewsLoading(true);
+      setNewsLoaded(false);
+      setNewsError(false);
+      
       const newsResponse = await fetch(`http://localhost:8000/api/stocks/${symbol}/news?date=${formattedDate}`);
       
       if (!newsResponse.ok) {
         if (newsResponse.status === 429) {
+          setNews([]);
           setNewsWarning('Daily news rate limit reached.');
           setNewsError(true);
+          setNewsLoading(false);
           return;
         }
         const errorData = await newsResponse.json();
+        setNews([]);
         setNewsWarning(errorData.detail || 'An error occurred while fetching news');
         setNewsError(true);
+        setNewsLoading(false);
         return;
       }
 
       const newsData = await newsResponse.json();
       setNews(newsData.data || []);
       setNewsWarning(newsData.warning || '');
+      setNewsLoaded(true);
+      setNewsLoading(false);
       
-      // Fetch news summary for the selected date
+      // Only after news is loaded, fetch the AI summary
       setSummaryLoading(true);
       setSummaryError(null);
+      setNewsSummary(null);
       
       const summaryResponse = await fetch(`http://localhost:8000/api/stocks/${symbol}/news-summary?date=${formattedDate}`);
       
@@ -160,6 +195,7 @@ const StockDetail = () => {
       console.error('Error fetching data for date:', error);
       setNewsWarning('Failed to fetch news for selected date');
       setSummaryError('Failed to generate news summary');
+      setNewsLoading(false);
       setSummaryLoading(false);
     }
   };
@@ -361,7 +397,12 @@ const StockDetail = () => {
             data={newsSummary}
           />
           
-          <NewsSection news={news} warning={newsWarning} selectedDate={selectedDate} />
+          <NewsSection 
+            news={news} 
+            warning={newsWarning} 
+            selectedDate={selectedDate} 
+            isLoading={newsLoading}
+          />
         </Box>
       </Fade>
     </Container>

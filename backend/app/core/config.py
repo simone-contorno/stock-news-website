@@ -23,8 +23,8 @@ class Settings:
     
     # Together AI Configuration
     TOGETHER_API_KEY: str = os.getenv('TOGETHER_API_KEY')
-    TOGETHER_API_BASE_URL: str = "https://api.together.xyz/v1/completions"
-    TOGETHER_API_MODEL: str = "mistralai/Mixtral-8x7B-Instruct-v0.1"
-    TOGETHER_API_TIMEOUT: int = 30
+    TOGETHER_API_BASE_URL: str = "https://api.together.xyz/v1/chat/completions"
+    TOGETHER_API_MODEL: str = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
+    TOGETHER_API_TIMEOUT: int = 120
 
 settings = Settings()

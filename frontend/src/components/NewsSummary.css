@@ -1,0 +1,35 @@
+.sentiment-indicator.positive,
+.correlation-indicator.positive,
+.prediction-indicator.positive {
+  color: #2E7D32; /* Green color for positive indicators */
+  margin-right: 8px;
+}
+
+.sentiment-indicator.negative,
+.correlation-indicator.negative,
+.prediction-indicator.negative {
+  color: #D32F2F; /* Red color for negative indicators */
+  margin-right: 8px;
+}
+
+.news-summary-section h2,
+.price-correlation-section h2,
+.trend-prediction-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #0B3954;
+}
+
+.news-summary-section ul,
+.price-correlation-section ul,
+.trend-prediction-section ul {
+  padding-left: 1rem;
+}
+
+.news-summary-section li,
+.price-correlation-section li,
+.trend-prediction-section li {
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+}
