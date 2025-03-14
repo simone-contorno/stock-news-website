@@ -74,6 +74,7 @@ Format your response using the following HTML structure:
   <ul>
     <li><span class="correlation-indicator positive">●</span> Correlation point 1</li>
     <li><span class="correlation-indicator negative">●</span> Correlation point 2</li>
+    <li><span class="correlation-indicator neutral">●</span> Correlation point 3</li>
     <!-- Add more bullet points as needed -->
   </ul>
 </div>

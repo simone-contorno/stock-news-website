@@ -12,6 +12,13 @@
   margin-right: 8px;
 }
 
+.sentiment-indicator.neutral,
+.correlation-indicator.neutral,
+.prediction-indicator.neutral {
+  color: #F57C00; /* Orange color for neutral indicators */
+  margin-right: 8px;
+}
+
 .news-summary-section h2,
 .price-correlation-section h2,
 .trend-prediction-section h2 {
