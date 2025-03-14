@@ -13,10 +13,11 @@ async def get_stocks(db: Session = Depends(get_db)):
     stocks = db.query(Stock).all()
     if not stocks:
         indices = [
-            # Major Global Indices
+            # Major Global Indices (most important global markets)
             {"symbol": "^GSPC", "name": "S&P 500", "category": "major", "region": "US"},
             {"symbol": "^DJI", "name": "Dow Jones Industrial Average", "category": "major", "region": "US"},
             {"symbol": "^IXIC", "name": "NASDAQ Composite", "category": "major", "region": "US"},
+            {"symbol": "^NYA", "name": "NYSE Composite", "category": "major", "region": "US"},
             {"symbol": "^FTSE", "name": "FTSE 100", "category": "major", "region": "UK"},
             {"symbol": "^GDAXI", "name": "DAX", "category": "major", "region": "Germany"},
             {"symbol": "^FCHI", "name": "CAC 40", "category": "major", "region": "France"},
@@ -24,20 +25,42 @@ async def get_stocks(db: Session = Depends(get_db)):
             {"symbol": "^HSI", "name": "Hang Seng", "category": "major", "region": "Hong Kong"},
             {"symbol": "000001.SS", "name": "Shanghai Composite", "category": "major", "region": "China"},
             {"symbol": "^BSESN", "name": "BSE SENSEX", "category": "major", "region": "India"},
+            {"symbol": "^AXJO", "name": "ASX 200", "category": "major", "region": "Australia"},
 
-            # Minor/Regional Indices
+            # US Market Indices
             {"symbol": "^RUT", "name": "Russell 2000", "category": "minor", "region": "US"},
             {"symbol": "^VIX", "name": "CBOE Volatility Index", "category": "minor", "region": "US"},
+            {"symbol": "^DJT", "name": "Dow Jones Transportation", "category": "minor", "region": "US"},
+            {"symbol": "^DJU", "name": "Dow Jones Utilities", "category": "minor", "region": "US"},
+            {"symbol": "^NDX", "name": "NASDAQ-100", "category": "minor", "region": "US"},
+            {"symbol": "^OEX", "name": "S&P 100", "category": "minor", "region": "US"},
+            {"symbol": "^MID", "name": "S&P 400", "category": "minor", "region": "US"},
+
+            # European Indices
             {"symbol": "^STOXX50E", "name": "EURO STOXX 50", "category": "minor", "region": "Europe"},
             {"symbol": "^AEX", "name": "AEX", "category": "minor", "region": "Netherlands"},
             {"symbol": "^IBEX", "name": "IBEX 35", "category": "minor", "region": "Spain"},
             {"symbol": "^SSMI", "name": "Swiss Market Index", "category": "minor", "region": "Switzerland"},
-            {"symbol": "^AXJO", "name": "ASX 200", "category": "minor", "region": "Australia"},
+            {"symbol": "FTSEMIB.MI", "name": "FTSE MIB", "category": "minor", "region": "Italy"},
+            {"symbol": "^OMXC25", "name": "OMX Copenhagen 25", "category": "minor", "region": "Denmark"},
+            {"symbol": "^OSEAX", "name": "Oslo Stock Exchange", "category": "minor", "region": "Norway"},
+
+            # Asian Indices
             {"symbol": "^KS11", "name": "KOSPI", "category": "minor", "region": "South Korea"},
             {"symbol": "^TWII", "name": "Taiwan Weighted", "category": "minor", "region": "Taiwan"},
-            {"symbol": "^BVSP", "name": "Bovespa", "category": "minor", "region": "Brazil"},
+            {"symbol": "^STI", "name": "Straits Times Index", "category": "minor", "region": "Singapore"},
+            {"symbol": "^JKSE", "name": "Jakarta Composite", "category": "minor", "region": "Indonesia"},
+            {"symbol": "^KLSE", "name": "FTSE Bursa Malaysia", "category": "minor", "region": "Malaysia"},
+            {"symbol": "^SET.BK", "name": "SET Index", "category": "minor", "region": "Thailand"},
 
-            # Major Tech Stocks
+            # Other Regional Indices
+            {"symbol": "^BVSP", "name": "Bovespa", "category": "minor", "region": "Brazil"},
+            {"symbol": "^MXX", "name": "IPC Mexico", "category": "minor", "region": "Mexico"},
+            {"symbol": "^MERV", "name": "MERVAL", "category": "minor", "region": "Argentina"},
+            {"symbol": "^TA125.TA", "name": "Tel Aviv 125", "category": "minor", "region": "Israel"},
+            {"symbol": "^CASE30", "name": "EGX 30", "category": "minor", "region": "Egypt"},
+
+            # Tech Stocks
             {"symbol": "AAPL", "name": "Apple Inc.", "category": "stock", "region": "US"},
             {"symbol": "MSFT", "name": "Microsoft Corporation", "category": "stock", "region": "US"},
             {"symbol": "GOOGL", "name": "Alphabet Inc.", "category": "stock", "region": "US"},
@@ -45,18 +68,45 @@ async def get_stocks(db: Session = Depends(get_db)):
             {"symbol": "NVDA", "name": "NVIDIA Corporation", "category": "stock", "region": "US"},
             {"symbol": "META", "name": "Meta Platforms Inc.", "category": "stock", "region": "US"},
             {"symbol": "TSLA", "name": "Tesla Inc.", "category": "stock", "region": "US"},
+            {"symbol": "AVGO", "name": "Broadcom Inc.", "category": "stock", "region": "US"},
+            {"symbol": "ORCL", "name": "Oracle Corporation", "category": "stock", "region": "US"},
+            {"symbol": "CRM", "name": "Salesforce Inc.", "category": "stock", "region": "US"},
+            {"symbol": "AMD", "name": "Advanced Micro Devices", "category": "stock", "region": "US"},
+            {"symbol": "INTC", "name": "Intel Corporation", "category": "stock", "region": "US"},
 
-            # Major Financial Stocks
+            # Financial Stocks
             {"symbol": "JPM", "name": "JPMorgan Chase & Co.", "category": "stock", "region": "US"},
             {"symbol": "BAC", "name": "Bank of America Corp.", "category": "stock", "region": "US"},
+            {"symbol": "WFC", "name": "Wells Fargo & Co.", "category": "stock", "region": "US"},
+            {"symbol": "GS", "name": "Goldman Sachs Group", "category": "stock", "region": "US"},
+            {"symbol": "MS", "name": "Morgan Stanley", "category": "stock", "region": "US"},
+            {"symbol": "BLK", "name": "BlackRock Inc.", "category": "stock", "region": "US"},
             {"symbol": "V", "name": "Visa Inc.", "category": "stock", "region": "US"},
+            {"symbol": "MA", "name": "Mastercard Inc.", "category": "stock", "region": "US"},
 
-            # Other Major Stocks
+            # Healthcare & Pharma
             {"symbol": "JNJ", "name": "Johnson & Johnson", "category": "stock", "region": "US"},
+            {"symbol": "UNH", "name": "UnitedHealth Group", "category": "stock", "region": "US"},
+            {"symbol": "PFE", "name": "Pfizer Inc.", "category": "stock", "region": "US"},
+            {"symbol": "MRK", "name": "Merck & Co.", "category": "stock", "region": "US"},
+            {"symbol": "ABBV", "name": "AbbVie Inc.", "category": "stock", "region": "US"},
+
+            # Consumer & Retail
             {"symbol": "WMT", "name": "Walmart Inc.", "category": "stock", "region": "US"},
-            {"symbol": "PG", "name": "Procter & Gamble Co.", "category": "stock", "region": "US"},
+            {"symbol": "PG", "name": "Procter & Gamble", "category": "stock", "region": "US"},
+            {"symbol": "KO", "name": "Coca-Cola Company", "category": "stock", "region": "US"},
+            {"symbol": "PEP", "name": "PepsiCo Inc.", "category": "stock", "region": "US"},
+            {"symbol": "COST", "name": "Costco Wholesale", "category": "stock", "region": "US"},
+            {"symbol": "MCD", "name": "McDonald's Corp.", "category": "stock", "region": "US"},
+            {"symbol": "NKE", "name": "Nike Inc.", "category": "stock", "region": "US"},
+
+            # Energy & Industrial
             {"symbol": "XOM", "name": "Exxon Mobil Corp.", "category": "stock", "region": "US"},
-            {"symbol": "KO", "name": "Coca-Cola Company", "category": "stock", "region": "US"}
+            {"symbol": "CVX", "name": "Chevron Corporation", "category": "stock", "region": "US"},
+            {"symbol": "BA", "name": "Boeing Company", "category": "stock", "region": "US"},
+            {"symbol": "CAT", "name": "Caterpillar Inc.", "category": "stock", "region": "US"},
+            {"symbol": "HON", "name": "Honeywell International", "category": "stock", "region": "US"},
+            {"symbol": "GE", "name": "General Electric", "category": "stock", "region": "US"}
         ]
         
         sample_stocks = [Stock(**data) for data in indices]

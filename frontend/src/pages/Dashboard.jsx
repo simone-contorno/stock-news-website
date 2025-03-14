@@ -115,7 +115,7 @@ const Dashboard = () => {
       </Paper>
 
       <Typography variant="h5" gutterBottom sx={{ fontWeight: 500, mb: 3 }}>
-        Available Stocks
+        Top Stocks
       </Typography>
       <Grid container spacing={3}>
         {dashboardStocks.map((stock) => (
