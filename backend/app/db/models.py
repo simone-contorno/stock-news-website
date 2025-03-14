@@ -10,6 +10,8 @@ class Stock(Base):
     id = Column(Integer, primary_key=True, index=True)
     symbol = Column(String, unique=True, index=True)
     name = Column(String)
+    category = Column(String, default='stock')  # 'major', 'minor'
+    region = Column(String, default='US')
     last_updated = Column(DateTime, default=datetime.utcnow)
 
 class StockPrice(Base):

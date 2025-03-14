@@ -12,19 +12,27 @@ router = APIRouter()
 async def get_stocks(db: Session = Depends(get_db)):
     stocks = db.query(Stock).all()
     if not stocks:
-        # Add sample data if no stocks exist
-        sample_stocks = [
-            Stock(symbol="AAPL", name="Apple Inc."),
-            Stock(symbol="GOOGL", name="Alphabet Inc."),
-            Stock(symbol="MSFT", name="Microsoft Corporation")
+        # Major indices
+        indices = [
+            {"symbol": "^GSPC", "name": "S&P 500", "category": "major", "region": "US"},
+            {"symbol": "^DJI", "name": "Dow Jones Industrial Average", "category": "major", "region": "US"},
+            {"symbol": "^IXIC", "name": "NASDAQ Composite", "category": "major", "region": "US"},
+            {"symbol": "^RUT", "name": "Russell 2000", "category": "minor", "region": "US"},
+            {"symbol": "^FTSE", "name": "FTSE 100", "category": "major", "region": "UK"},
+            {"symbol": "^N225", "name": "Nikkei 225", "category": "major", "region": "Japan"},
+            {"symbol": "^HSI", "name": "Hang Seng Index", "category": "major", "region": "Hong Kong"},
+            # Original stock samples
+            {"symbol": "AAPL", "name": "Apple Inc.", "category": "stock", "region": "US"},
+            {"symbol": "GOOGL", "name": "Alphabet Inc.", "category": "stock", "region": "US"},
+            {"symbol": "MSFT", "name": "Microsoft Corporation", "category": "stock", "region": "US"}
         ]
+        
+        sample_stocks = [Stock(**data) for data in indices]
         db.add_all(sample_stocks)
         db.commit()
         stocks = sample_stocks
-    return stocks
 
-# Fix the unreachable code in the stocks.py get_stock_prices function
-# Replace the entire function with this corrected version:
+    return stocks
 
 @router.get("/stocks/{symbol}/prices")
 async def get_stock_prices(symbol: str, period: str = "7d", db: Session = Depends(get_db)):

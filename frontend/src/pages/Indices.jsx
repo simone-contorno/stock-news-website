@@ -41,7 +41,7 @@ const Indices = () => {
             >
               <CardContent sx={{ flexGrow: 1 }}>
                 <Typography variant="h5" component="div" gutterBottom>
-                  {stock.symbol}
+                  {stock.symbol.replace('^', '')}
                 </Typography>
                 <Typography color="text.secondary">
                   {stock.name}

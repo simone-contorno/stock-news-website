@@ -118,7 +118,7 @@ const StockDetail = () => {
       }
     },
     title: {
-      text: `${symbol} Stock Price`,
+      text: `${symbol.replace('^', ' ')} Stock Price`,
       style: {
         fontSize: '20px',
         fontWeight: '500',
@@ -168,7 +168,7 @@ const StockDetail = () => {
       formatter: function() {
         const date = new Date(this.x);
         date.setDate(date.getDate() + 1); // Add one day to fix tooltip date display
-        return `<b>${symbol}</b><br/>
+        return `<b>${symbol.replace('^', ' ')}</b><br/>
                 Date: ${Highcharts.dateFormat('%Y-%m-%d', date)}<br/>
                 Price: $${this.y.toFixed(2)}`;
       }
@@ -223,7 +223,7 @@ const StockDetail = () => {
       }
     },
     series: [{
-      name: symbol,
+      name: symbol.replace('^', ''),
       data: stockPrices ? stockPrices.map(price => {
         const date = new Date(price.timestamp);
         // Add one day to fix the offset

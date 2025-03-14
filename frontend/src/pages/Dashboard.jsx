@@ -79,7 +79,7 @@ const Dashboard = () => {
                 }}
               >
                 <Typography variant="h4" gutterBottom>
-                  {stock.symbol}
+                  {stock.symbol.replace('^', '')}
                 </Typography>
                 <Typography variant="h6" sx={{ color: 'text.secondary' }}>
                   {stock.name}
@@ -124,7 +124,7 @@ const Dashboard = () => {
             >
               <CardContent sx={{ flexGrow: 1 }}>
                 <Typography variant="h5" component="div" gutterBottom>
-                  {stock.symbol}
+                  {stock.symbol.replace('^', '')}
                 </Typography>
                 <Typography color="text.secondary" gutterBottom>
                   {stock.name}
