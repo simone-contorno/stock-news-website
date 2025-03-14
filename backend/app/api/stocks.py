@@ -12,19 +12,51 @@ router = APIRouter()
 async def get_stocks(db: Session = Depends(get_db)):
     stocks = db.query(Stock).all()
     if not stocks:
-        # Major indices
         indices = [
+            # Major Global Indices
             {"symbol": "^GSPC", "name": "S&P 500", "category": "major", "region": "US"},
             {"symbol": "^DJI", "name": "Dow Jones Industrial Average", "category": "major", "region": "US"},
             {"symbol": "^IXIC", "name": "NASDAQ Composite", "category": "major", "region": "US"},
-            {"symbol": "^RUT", "name": "Russell 2000", "category": "minor", "region": "US"},
             {"symbol": "^FTSE", "name": "FTSE 100", "category": "major", "region": "UK"},
+            {"symbol": "^GDAXI", "name": "DAX", "category": "major", "region": "Germany"},
+            {"symbol": "^FCHI", "name": "CAC 40", "category": "major", "region": "France"},
             {"symbol": "^N225", "name": "Nikkei 225", "category": "major", "region": "Japan"},
-            {"symbol": "^HSI", "name": "Hang Seng Index", "category": "major", "region": "Hong Kong"},
-            # Original stock samples
+            {"symbol": "^HSI", "name": "Hang Seng", "category": "major", "region": "Hong Kong"},
+            {"symbol": "000001.SS", "name": "Shanghai Composite", "category": "major", "region": "China"},
+            {"symbol": "^BSESN", "name": "BSE SENSEX", "category": "major", "region": "India"},
+
+            # Minor/Regional Indices
+            {"symbol": "^RUT", "name": "Russell 2000", "category": "minor", "region": "US"},
+            {"symbol": "^VIX", "name": "CBOE Volatility Index", "category": "minor", "region": "US"},
+            {"symbol": "^STOXX50E", "name": "EURO STOXX 50", "category": "minor", "region": "Europe"},
+            {"symbol": "^AEX", "name": "AEX", "category": "minor", "region": "Netherlands"},
+            {"symbol": "^IBEX", "name": "IBEX 35", "category": "minor", "region": "Spain"},
+            {"symbol": "^SSMI", "name": "Swiss Market Index", "category": "minor", "region": "Switzerland"},
+            {"symbol": "^AXJO", "name": "ASX 200", "category": "minor", "region": "Australia"},
+            {"symbol": "^KS11", "name": "KOSPI", "category": "minor", "region": "South Korea"},
+            {"symbol": "^TWII", "name": "Taiwan Weighted", "category": "minor", "region": "Taiwan"},
+            {"symbol": "^BVSP", "name": "Bovespa", "category": "minor", "region": "Brazil"},
+
+            # Major Tech Stocks
             {"symbol": "AAPL", "name": "Apple Inc.", "category": "stock", "region": "US"},
+            {"symbol": "MSFT", "name": "Microsoft Corporation", "category": "stock", "region": "US"},
             {"symbol": "GOOGL", "name": "Alphabet Inc.", "category": "stock", "region": "US"},
-            {"symbol": "MSFT", "name": "Microsoft Corporation", "category": "stock", "region": "US"}
+            {"symbol": "AMZN", "name": "Amazon.com Inc.", "category": "stock", "region": "US"},
+            {"symbol": "NVDA", "name": "NVIDIA Corporation", "category": "stock", "region": "US"},
+            {"symbol": "META", "name": "Meta Platforms Inc.", "category": "stock", "region": "US"},
+            {"symbol": "TSLA", "name": "Tesla Inc.", "category": "stock", "region": "US"},
+
+            # Major Financial Stocks
+            {"symbol": "JPM", "name": "JPMorgan Chase & Co.", "category": "stock", "region": "US"},
+            {"symbol": "BAC", "name": "Bank of America Corp.", "category": "stock", "region": "US"},
+            {"symbol": "V", "name": "Visa Inc.", "category": "stock", "region": "US"},
+
+            # Other Major Stocks
+            {"symbol": "JNJ", "name": "Johnson & Johnson", "category": "stock", "region": "US"},
+            {"symbol": "WMT", "name": "Walmart Inc.", "category": "stock", "region": "US"},
+            {"symbol": "PG", "name": "Procter & Gamble Co.", "category": "stock", "region": "US"},
+            {"symbol": "XOM", "name": "Exxon Mobil Corp.", "category": "stock", "region": "US"},
+            {"symbol": "KO", "name": "Coca-Cola Company", "category": "stock", "region": "US"}
         ]
         
         sample_stocks = [Stock(**data) for data in indices]

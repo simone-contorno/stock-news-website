@@ -12,17 +12,30 @@ const Dashboard = () => {
   const { list: stocks, status, error } = useSelector((state) => state.stocks)
   const prices = useSelector((state) => state.stocks.prices)
 
+  // Filter stocks for the dashboard display
+  const dashboardStocks = stocks.filter(stock => {
+    // Main indices
+    if (stock.symbol === '^GSPC' || stock.symbol === '^DJI' || stock.symbol === '^IXIC') {
+      return true;
+    }
+    // Tech stocks
+    if (stock.category === 'stock' && ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA'].includes(stock.symbol)) {
+      return true;
+    }
+    return false;
+  });
+
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchStocks())
     }
-    // Fetch initial prices for all stocks
-    stocks.forEach(stock => {
+    // Fetch initial prices only for dashboard stocks
+    dashboardStocks.forEach(stock => {
       if (!prices[stock.symbol]) {
         dispatch(fetchStockPrices({ symbol: stock.symbol, period: '7d' }))
       }
     })
-  }, [status, dispatch, stocks, prices])
+  }, [status, dispatch, dashboardStocks, prices])
 
   if (status === 'loading') {
     return <Typography>Loading...</Typography>
@@ -68,7 +81,7 @@ const Dashboard = () => {
           interval={5000}
           sx={{ minHeight: '100px' }}
         >
-          {stocks.map((stock) => {
+          {dashboardStocks.map((stock) => {
             const change = getStockChange(stock.symbol)
             return (
               <Box
@@ -105,7 +118,7 @@ const Dashboard = () => {
         Available Stocks
       </Typography>
       <Grid container spacing={3}>
-        {stocks.map((stock) => (
+        {dashboardStocks.map((stock) => (
           <Grid item xs={12} sm={6} md={4} key={stock.symbol}>
             <Card
               component={Link}
