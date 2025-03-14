@@ -160,9 +160,8 @@ const StockDetail = () => {
         fontSize: '14px'
       },
       formatter: function() {
-        // Add one day to compensate for timezone offset
         const date = new Date(this.x);
-        date.setDate(date.getDate() + 1);
+        date.setDate(date.getDate() + 1); // Add one day to fix tooltip date display
         return `<b>${symbol}</b><br/>
                 Date: ${Highcharts.dateFormat('%Y-%m-%d', date)}<br/>
                 Price: $${this.y.toFixed(2)}`;
@@ -196,11 +195,13 @@ const StockDetail = () => {
       name: symbol,
       data: stockPrices ? stockPrices.map(price => {
         const date = new Date(price.timestamp);
+        // Add one day to fix the offset
+        date.setDate(date.getDate() + 1);
         return [
           date.getTime(),
           parseFloat(price.close)
         ];
-      }) : [],
+      }).sort((a, b) => a[0] - b[0]) : [], // Keep data sorted by date
       color: '#0B3954',
       lineWidth: 2
     }],
