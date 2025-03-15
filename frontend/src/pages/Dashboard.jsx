@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { Container, Grid, Card, CardContent, Typography, Box, Paper } from '@mui/material'
+import { Container, Grid, Card, CardContent, Typography, Box, Paper, CircularProgress } from '@mui/material'
 import { fetchStocks, fetchStockPrices } from '../store/stocksSlice'
 import Carousel from 'react-material-ui-carousel'
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'
@@ -38,7 +38,11 @@ const Dashboard = () => {
   }, [status, dispatch, dashboardStocks, prices])
 
   if (status === 'loading') {
-    return <Typography>Loading...</Typography>
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+        <CircularProgress size={60} thickness={4} />
+      </Box>
+    )
   }
 
   if (status === 'failed') {
