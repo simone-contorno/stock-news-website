@@ -6,7 +6,7 @@ from ..core.config import settings
 
 logger = logging.getLogger(__name__)
 
-def generate_news_summary(symbol: str, news_articles: List[Dict[str, Any]], price_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+def generate_news_summary(symbol: str, news_articles: List[Dict[str, Any]], price_data: List[Dict[str, Any]], date: str = None) -> Dict[str, Any]:
     """
     Generate a summary of news articles and analyze correlation with price trends using Together AI.
     
@@ -40,25 +40,86 @@ def generate_news_summary(symbol: str, news_articles: List[Dict[str, Any]], pric
             "message": "No price data available for analysis"
         }
     
+    # Filter data if a specific date is provided
+    if date:
+        # Filter news articles for the specific date
+        filtered_news = []
+        for article in news_articles:
+            published_date = article.get('published_at', '')
+            # Extract date part from ISO format (YYYY-MM-DDThh:mm:ss)
+            if published_date:
+                # Handle different date formats
+                if 'T' in published_date:  # ISO format
+                    article_date = published_date.split('T')[0]
+                else:  # Try to extract YYYY-MM-DD part
+                    article_date = published_date[:10] if len(published_date) >= 10 else published_date
+                
+                # Exact date match - ensure proper comparison
+                if article_date == date:  
+                    filtered_news.append(article)
+        
+        # Use filtered news if available, otherwise use original news
+        news_to_analyze = filtered_news if filtered_news else news_articles
+        
+        # Filter price data for the specific date
+        filtered_price = []
+        for price_point in price_data:
+            timestamp = price_point.get('timestamp', '')
+            # Extract date part from timestamp
+            if timestamp:
+                # Handle different timestamp formats
+                if ' ' in timestamp:  # Format: YYYY-MM-DD HH:MM:SS
+                    price_date = timestamp.split(' ')[0]
+                else:  # Try to extract YYYY-MM-DD part
+                    price_date = timestamp[:10] if len(timestamp) >= 10 else timestamp
+                
+                # Compare with the requested date
+                if price_date == date:  # Exact date match
+                    filtered_price.append(price_point)
+        
+        # Use filtered price if available, otherwise use original price data
+        price_to_analyze = filtered_price if filtered_price else price_data
+    else:
+        news_to_analyze = news_articles
+        price_to_analyze = price_data
+    
     # Prepare news data for the prompt
     news_text = "\n\n".join([f"Title: {article.get('title', '')}\nSource: {article.get('source', '')}\nDate: {article.get('published_at', '')}\nDescription: {article.get('description', '')}" 
-                           for article in news_articles[:10]])  # Limit to 10 articles to avoid token limits
+                           for article in news_to_analyze[:10]])  # Limit to 10 articles to avoid token limits
     
     # Extract price trend information
-    start_price = price_data[0]['close'] if price_data else None
-    end_price = price_data[-1]['close'] if price_data else None
+    start_price = price_to_analyze[0]['close'] if price_to_analyze else None
+    end_price = price_to_analyze[-1]['close'] if price_to_analyze else None
     price_change = None
     price_change_percent = None
+    
+    # Extract date information for analysis period
+    # If a specific date is provided, use it directly to avoid any inconsistencies
+    if date:
+        start_date = date
+        end_date = date
+    else:
+        start_date = price_to_analyze[0].get('timestamp', 'N/A').split(' ')[0] if price_to_analyze and ' ' in price_to_analyze[0].get('timestamp', 'N/A') else price_to_analyze[0].get('timestamp', 'N/A')[:10] if price_to_analyze else 'N/A'
+        end_date = price_to_analyze[-1].get('timestamp', 'N/A').split(' ')[0] if price_to_analyze and ' ' in price_to_analyze[-1].get('timestamp', 'N/A') else price_to_analyze[-1].get('timestamp', 'N/A')[:10] if price_to_analyze else 'N/A'
     
     if start_price is not None and end_price is not None:
         price_change = end_price - start_price
         price_change_percent = (price_change / start_price) * 100
-    
+
     # Construct the prompt for the AI
     prompt = f"""
 You are a financial analyst assistant. Based on the following news articles about {symbol.replace("^","")} stock and its price data, create a structured, professional analysis with proper HTML formatting for web display.
 
+{"Analysis for specific date: " + date if date else "Analysis for period: " + start_date + " to " + end_date}
+
 Format your response using the following HTML structure:
+
+<div class="analysis-period-section">
+  <h2>Analysis Period</h2>
+  <p>{"Date: " + date if date else "From " + start_date + " to " + end_date}</p>
+  <p>Stock: {symbol.replace("^","")}</p>
+  <p>Price Change: {price_change_percent:.2f}% (${price_change:.2f})</p>
+</div>
 
 <div class="news-summary-section">
   <h2>News Summary</h2>
@@ -88,13 +149,10 @@ Format your response using the following HTML structure:
   </ul>
 </div>
 
-Stock: {symbol.replace("^","")}
-Price Change: {price_change_percent:.2f}% (${price_change:.2f})
-
 News Articles:
 {news_text}
 
-Your analysis should be factual, balanced, and focus only on the relationship between news and price movements. Do not include any disclaimers, introductions, or conclusions - just the three HTML-formatted sections above. Ensure all HTML tags are properly closed and formatted.
+Your analysis should be factual, balanced, and focus only on the relationship between news and price movements. Do not include any disclaimers, introductions, or conclusions - just the four HTML-formatted sections above. Ensure all HTML tags are properly closed and formatted. Make sure to reference the specific date in your analysis.
 """
     
     # Prepare the API request

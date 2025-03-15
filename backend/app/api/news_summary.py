@@ -40,7 +40,7 @@ async def get_stock_news_summary(symbol: str, period: str = "7d", date: str = No
         raise HTTPException(status_code=500, detail=f"Error fetching stock data: {str(e)}")
     
     # Generate summary using Together AI
-    summary_result = generate_news_summary(symbol, news_data["data"], price_history)
+    summary_result = generate_news_summary(symbol, news_data["data"], price_history, date)
     
     if summary_result["status"] == "error":
         raise HTTPException(status_code=500, detail=summary_result["message"])

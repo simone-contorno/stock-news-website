@@ -33,6 +33,7 @@ const StockDetail = () => {
   const [summaryError, setSummaryError] = useState(null)
   const [chartLoaded, setChartLoaded] = useState(false)
   const [newsLoaded, setNewsLoaded] = useState(false)
+  const [isDateSelected, setIsDateSelected] = useState(false)
   const stockPrices = useSelector((state) => state.stocks.prices[symbol]?.[selectedPeriod])
   const pricesStatus = useSelector((state) => state.stocks.pricesStatus[symbol]?.[selectedPeriod])
   const pricesError = useSelector((state) => state.stocks.pricesError[symbol]?.[selectedPeriod])
@@ -97,8 +98,8 @@ const StockDetail = () => {
   
   // Fetch news summary and analysis after news is loaded
   useEffect(() => {
-    // Only fetch AI summary after news is loaded
-    if (!newsLoaded) return;
+    // Only fetch AI summary after news is loaded and no specific date is selected
+    if (!newsLoaded || isDateSelected) return;
     
     setSummaryLoading(true)
     setSummaryError(null)
@@ -138,6 +139,9 @@ const StockDetail = () => {
     try {
       const formattedDate = date.toISOString().split('T')[0];
       
+      // Set flag to indicate a specific date is selected
+      setIsDateSelected(true);
+      
       // First, fetch news for the selected date
       setNewsLoading(true);
       setNewsLoaded(false);
@@ -172,7 +176,12 @@ const StockDetail = () => {
       setSummaryError(null);
       setNewsSummary(null);
       
-      const summaryResponse = await fetch(`http://localhost:8000/api/stocks/${symbol}/news-summary?date=${formattedDate}`);
+      // Add one day to the date for the AI service
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const offsetFormattedDate = nextDay.toISOString().split('T')[0];
+      
+      const summaryResponse = await fetch(`http://localhost:8000/api/stocks/${symbol}/news-summary?date=${offsetFormattedDate}`);
       
       if (!summaryResponse.ok) {
         if (summaryResponse.status === 429) {
@@ -214,9 +223,18 @@ const StockDetail = () => {
       events: {
         click: function(event) {
           if (event.xAxis && event.xAxis[0]) {
-            const date = new Date(event.xAxis[0].value)
-            date.setHours(0, 0, 0, 0)
-            setSelectedDate(date)
+            // Get date from chart click without any adjustments
+            const clickTime = event.xAxis[0].value;
+            const date = new Date(clickTime);
+            // Ensure we're using the exact date from the click without timezone adjustments
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const day = date.getDate();
+            // Create a new date object with the exact year, month, and day
+            const exactDate = new Date(year, month, day, 0, 0, 0, 0);
+            setSelectedDate(exactDate);
+            // Also fetch news for this date when clicking on chart area
+            fetchNewsForDate(exactDate);
           }
         }
       }
@@ -270,10 +288,16 @@ const StockDetail = () => {
         fontSize: '14px'
       },
       formatter: function() {
+        // Create a new date object from the timestamp and ensure it's using local time
+        // Don't use Highcharts.dateFormat which might apply timezone adjustments
         const date = new Date(this.x);
-        date.setDate(date.getDate()+1); // Keep this adjustment for tooltip only
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
+        
         return `<b>${symbol.replace('^', ' ')}</b><br/>
-                Date: ${Highcharts.dateFormat('%Y-%m-%d', date)}<br/>
+                Date: ${formattedDate}<br/>
                 Price: $${this.y.toFixed(2)}`;
       }
     },
@@ -292,10 +316,18 @@ const StockDetail = () => {
         point: {
           events: {
             click: function() {
-              const date = new Date(this.x);
-              date.setHours(0, 0, 0, 0);
-              setSelectedDate(date);
-              fetchNewsForDate(date);
+              // Get the date from the point's x value (timestamp)
+              const pointTime = this.x;
+              const date = new Date(pointTime);
+              // Ensure we're using the exact date from the point without timezone adjustments
+              const year = date.getFullYear();
+              const month = date.getMonth();
+              const day = date.getDate();
+              // Create a new date object with the exact year, month, and day
+              const exactDate = new Date(year, month, day, 0, 0, 0, 0);
+              // Set as selected date and fetch news for this exact date
+              setSelectedDate(exactDate);
+              fetchNewsForDate(exactDate);
             }
           }
         }
@@ -329,8 +361,15 @@ const StockDetail = () => {
     series: [{
       name: symbol.replace('^', ''),
       data: stockPrices ? stockPrices.map(price => {
-        const date = new Date(price.timestamp);
-        date.setDate(date.getDate());
+        // Parse the timestamp string to create a date object
+        const timestampParts = price.timestamp.split(' ')[0].split('-');
+        const year = parseInt(timestampParts[0]);
+        const month = parseInt(timestampParts[1]) - 1; // JavaScript months are 0-indexed
+        const day = parseInt(timestampParts[2]);
+        
+        // Create a date object with the exact year, month, and day
+        const date = new Date(year, month, day);
+        
         return [
           date.getTime(),
           parseFloat(price.close)
@@ -343,6 +382,11 @@ const StockDetail = () => {
       enabled: false
     }
   }
+
+  // Reset isDateSelected when period changes
+  useEffect(() => {
+    setIsDateSelected(false);
+  }, [selectedPeriod]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
