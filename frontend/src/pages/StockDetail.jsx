@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Box, Typography, Paper, CircularProgress, Alert, Container, Fade } from '@mui/material'
+import { Box, Typography, Paper, CircularProgress, Alert, Container, Fade, Button, Tooltip } from '@mui/material'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import exporting from 'highcharts/modules/exporting'
 import offlineExporting from 'highcharts/modules/offline-exporting'
-import { ShowChart as ShowChartIcon } from '@mui/icons-material'
+import { ShowChart as ShowChartIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material'
 import { fetchStockPrices } from '../store/stocksSlice'
 import TimeRangeSelector from '../components/TimeRangeSelector'
 import NewsSection from '../components/NewsSection'
@@ -420,21 +420,34 @@ const StockDetail = () => {
               </Alert>
             ) : (
               <>
-                <Typography
-                  variant="h5"
-                  gutterBottom
-                  sx={{
-                    fontWeight: 600,
-                    color: 'text.primary',
-                    mb: 3,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1
-                  }}
-                >
-                  <ShowChartIcon sx={{ color: 'primary.main' }} />
-                  Stock Price Chart
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 600,
+                      color: 'text.primary',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}
+                  >
+                    <ShowChartIcon sx={{ color: 'primary.main' }} />
+                    Stock Price Chart
+                  </Typography>
+                  <Tooltip title="View on Yahoo Finance">
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      endIcon={<OpenInNewIcon />}
+                      href={`https://finance.yahoo.com/quote/${symbol}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Yahoo Finance
+                    </Button>
+                  </Tooltip>
+                </Box>
                 <Box sx={{ mb: 3 }}>
                   <TimeRangeSelector
                     selectedPeriod={selectedPeriod}
