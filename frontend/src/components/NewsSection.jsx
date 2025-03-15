@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Typography, Link, Card, CardContent, Grid, Alert, Fade, CircularProgress } from '@mui/material'
+import { Box, Typography, Link, Card, CardContent, Grid, Alert, Fade, CircularProgress, Paper } from '@mui/material'
 import { Article as ArticleIcon } from '@mui/icons-material'
 
 const NewsSection = ({ news = [], selectedDate, warning, isLoading }) => {
@@ -13,7 +13,19 @@ const NewsSection = ({ news = [], selectedDate, warning, isLoading }) => {
     : newsArray
 
   return (
-    <Box mt={4}>
+    <Paper
+      elevation={0}
+      sx={{
+        p: 3,
+        mb: 4,
+        borderRadius: 2,
+        backgroundColor: 'background.paper',
+        transition: 'box-shadow 0.3s ease-in-out',
+        '&:hover': {
+          boxShadow: '0 4px 20px 0 rgba(0,0,0,0.1)'
+        }
+      }}
+    >
       <Typography
         variant="h5"
         gutterBottom
@@ -115,7 +127,7 @@ const NewsSection = ({ news = [], selectedDate, warning, isLoading }) => {
           ))}
         </Grid>
       )}
-    </Box>
+    </Paper>
   )
 }
 

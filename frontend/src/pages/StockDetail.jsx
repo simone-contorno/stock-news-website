@@ -6,6 +6,7 @@ import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import exporting from 'highcharts/modules/exporting'
 import offlineExporting from 'highcharts/modules/offline-exporting'
+import { ShowChart as ShowChartIcon } from '@mui/icons-material'
 import { fetchStockPrices } from '../store/stocksSlice'
 import TimeRangeSelector from '../components/TimeRangeSelector'
 import NewsSection from '../components/NewsSection'
@@ -419,6 +420,21 @@ const StockDetail = () => {
               </Alert>
             ) : (
               <>
+                <Typography
+                  variant="h5"
+                  gutterBottom
+                  sx={{
+                    fontWeight: 600,
+                    color: 'text.primary',
+                    mb: 3,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
+                >
+                  <ShowChartIcon sx={{ color: 'primary.main' }} />
+                  Stock Price Chart
+                </Typography>
                 <Box sx={{ mb: 3 }}>
                   <TimeRangeSelector
                     selectedPeriod={selectedPeriod}
