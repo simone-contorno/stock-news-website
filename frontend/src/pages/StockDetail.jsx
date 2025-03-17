@@ -406,6 +406,40 @@ const StockDetail = () => {
               }
             }}
           >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 600,
+                  color: 'text.primary',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}
+              >
+                <ShowChartIcon sx={{ color: 'primary.main' }} />
+                Stock Price Chart
+              </Typography>
+              <Tooltip title="View on Yahoo Finance">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  endIcon={<OpenInNewIcon />}
+                  href={`https://finance.yahoo.com/quote/${symbol}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{ textTransform: 'none' }}
+                >
+                  Yahoo Finance
+                </Button>
+              </Tooltip>
+            </Box>
+            <Box sx={{ mb: 3 }}>
+              <TimeRangeSelector
+                selectedPeriod={selectedPeriod}
+                onPeriodChange={setSelectedPeriod}
+              />
+            </Box>
             {pricesStatus === 'loading' ? (
               <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
                 <CircularProgress />
@@ -421,46 +455,10 @@ const StockDetail = () => {
                 No price data available for the selected time period.
               </Alert>
             ) : (
-              <>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 600,
-                      color: 'text.primary',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1
-                    }}
-                  >
-                    <ShowChartIcon sx={{ color: 'primary.main' }} />
-                    Stock Price Chart
-                  </Typography>
-                  <Tooltip title="View on Yahoo Finance">
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      endIcon={<OpenInNewIcon />}
-                      href={`https://finance.yahoo.com/quote/${symbol}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{ textTransform: 'none' }}
-                    >
-                      Yahoo Finance
-                    </Button>
-                  </Tooltip>
-                </Box>
-                <Box sx={{ mb: 3 }}>
-                  <TimeRangeSelector
-                    selectedPeriod={selectedPeriod}
-                    onPeriodChange={setSelectedPeriod}
-                  />
-                </Box>
-                <HighchartsReact
-                  highcharts={Highcharts}
-                  options={chartOptions}
-                />
-              </>
+              <HighchartsReact
+                highcharts={Highcharts}
+                options={chartOptions}
+              />
             )}
           </Paper>
           
