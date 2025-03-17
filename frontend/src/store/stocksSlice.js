@@ -1,16 +1,16 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
-import { BACKEND_URL } from '../config'
+import { BACKEND_API_URL } from '../config'
 
 export const fetchStocks = createAsyncThunk('stocks/fetchStocks', async () => {
-  const response = await axios.get(`${BACKEND_URL}/stocks/`)
+  const response = await axios.get(`${BACKEND_API_URL}/stocks/`)
   return response.data
 })
 
 export const fetchStockPrices = createAsyncThunk(
   'stocks/fetchStockPrices',
   async ({ symbol, period }) => {
-    const response = await axios.get(`${BACKEND_URL}/stocks/${symbol}/prices?period=${period}`)
+    const response = await axios.get(`${BACKEND_API_URL}/stocks/${symbol}/prices?period=${period}`)
     return response.data
   }
 )
