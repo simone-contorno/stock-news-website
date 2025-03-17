@@ -4,10 +4,12 @@ from .api import stocks, news, news_summary
 
 app = FastAPI()
 
-# Configure CORS
+# Configure CORS with origins from settings
+from .core.config import settings
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
