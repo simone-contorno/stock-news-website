@@ -23,11 +23,14 @@ class Settings:
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
     
     # CORS settings for frontend
-    # In production, allow requests from Vercel frontend
-    # In development, allow requests from local frontend
+    # Allow requests from all possible frontend deployment locations
     CORS_ORIGINS: list = [
         "http://localhost:5173",  # Local Vite development server
-        "https://stock-news-website.vercel.app"  # Production Vercel frontend
+        "https://stock-news-website.vercel.app",  # Production Vercel frontend
+        "https://stock-news-website-frontend.vercel.app",  # Alternative Vercel frontend URL
+        "https://stock-news-website.netlify.app",  # Netlify deployment (if used)
+        "https://stock-news-website-git-main.vercel.app",  # Vercel preview deployment
+        "https://stock-news-website-frontend.netlify.app"  # Alternative Netlify URL (if used)
     ]
 
     # News API Configuration
