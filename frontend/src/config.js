@@ -11,19 +11,35 @@ const isProduction = window.location.hostname !== 'localhost';
 // Get the current domain for production use
 const currentDomain = window.location.origin;
 
+// Backend server IPs for load balancing in production
+const backendIPs = [
+  '3.75.158.163',
+  '3.125.183.140',
+  '35.157.117.28'
+];
+
+// Function to select a backend IP using a simple round-robin approach
+const getBackendIP = () => {
+  // Use a timestamp-based approach to distribute requests
+  const index = Math.floor(Date.now() / 1000) % backendIPs.length;
+  return backendIPs[index];
+};
+
 // Set the API URL based on the environment
 let API_URL;
 
 if (isProduction) {
-  // In production, try to use the same domain if possible (for Vercel deployments)
+  // In production, use the load-balanced backend IPs
   if (window.location.hostname.includes('vercel.app')) {
-    API_URL = 'https://stock-news-website.onrender.com/api'; // Production API URL on Render
+    const backendIP = getBackendIP();
+    API_URL = `http://${backendIP}/api`; // Use the selected backend IP
   } else if (window.location.hostname.includes('render.com')) {
     // If we're on Render, use relative URL to ensure same-origin requests
     API_URL = '/api';
   } else {
-    // Fallback to the known production backend URL
-    API_URL = 'https://stock-news-website.onrender.com/api';
+    // Fallback to the load-balanced backend
+    const backendIP = getBackendIP();
+    API_URL = `http://${backendIP}/api`;
   }
 } else {
   // Development environment

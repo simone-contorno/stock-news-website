@@ -30,7 +30,8 @@ class Settings:
         "https://stock-news-website-frontend.vercel.app",  # Alternative Vercel frontend URL
         "https://stock-news-website.netlify.app",  # Netlify deployment (if used)
         "https://stock-news-website-git-main.vercel.app",  # Vercel preview deployment
-        "https://stock-news-website-frontend.netlify.app"  # Alternative Netlify URL (if used)
+        "https://stock-news-website-frontend.netlify.app",  # Alternative Netlify URL (if used)
+        "*"  # Allow all origins in production for load balancing
     ]
 
     # News API Configuration
