@@ -175,15 +175,45 @@ Your analysis should be factual, balanced, and focus only on the relationship be
     }
     
     try:
-        response = requests.post(
-            settings.TOGETHER_API_BASE_URL,
-            headers=headers,
-            json=data,
-            timeout=settings.TOGETHER_API_TIMEOUT
-        )
+        # Add retry logic for Together API
+        max_retries = 3
+        retry_delay = 2
         
-        response.raise_for_status()
-        result = response.json()
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    settings.TOGETHER_API_BASE_URL,
+                    headers=headers,
+                    json=data,
+                    timeout=settings.TOGETHER_API_TIMEOUT
+                )
+                
+                # Handle rate limiting specifically
+                if response.status_code == 429:
+                    logger.warning(f"Together API rate limit hit (attempt {attempt+1}/{max_retries})")
+                    if attempt == max_retries - 1:
+                        return {
+                            "status": "error",
+                            "message": "Together API rate limit reached. Please try again later."
+                        }
+                    sleep(retry_delay * (attempt + 1))
+                    continue
+                
+                response.raise_for_status()
+                result = response.json()
+                break  # Success, exit retry loop
+                
+            except requests.exceptions.RequestException as e:
+                logger.error(f"API request error (attempt {attempt+1}/{max_retries}): {str(e)}")
+                if attempt == max_retries - 1:
+                    raise
+                sleep(retry_delay * (attempt + 1))
+        else:
+            # This executes if the for loop completes without a break
+            return {
+                "status": "error",
+                "message": f"Failed to connect to Together API after {max_retries} attempts"
+            }
         
         if 'choices' in result and len(result['choices']) > 0:
             # For chat completions API, the response format is different

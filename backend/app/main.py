@@ -9,12 +9,15 @@ app = FastAPI()
 # Configure CORS with origins from settings
 from .core.config import settings
 
+# Improved CORS configuration with better error handling
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Process-Time", "X-Rate-Limit"],
+    max_age=600,  # Cache preflight requests for 10 minutes
 )
 
 # Include routers
