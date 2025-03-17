@@ -6,6 +6,7 @@ import { fetchStocks, fetchStockPrices } from '../store/stocksSlice'
 import Carousel from 'react-material-ui-carousel'
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import TrendingDownIcon from '@mui/icons-material/TrendingDown'
+import ErrorMessage from '../components/ErrorMessage'
 
 const Dashboard = () => {
   const dispatch = useDispatch()
@@ -46,7 +47,15 @@ const Dashboard = () => {
   }
 
   if (status === 'failed') {
-    return <Typography color="error">{error}</Typography>
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <ErrorMessage 
+          title="Network Error" 
+          message="Unable to establish connection with the server." 
+          onRetry={() => dispatch(fetchStocks())}
+        />
+      </Container>
+    )
   }
 
   const getStockChange = (symbol) => {

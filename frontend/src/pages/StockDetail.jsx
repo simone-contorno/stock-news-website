@@ -411,9 +411,11 @@ const StockDetail = () => {
                 <CircularProgress />
               </Box>
             ) : pricesStatus === 'failed' ? (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                Error loading stock prices: {pricesError || 'Graph temporarily not available'}
-              </Alert>
+              <ErrorMessage 
+            title="Network Error" 
+            message={`Error loading stock prices: ${pricesError || 'Graph temporarily not available'}`}
+            onRetry={() => dispatch(fetchStockPrices({ symbol, period: selectedPeriod }))}
+          />
             ) : !stockPrices || stockPrices.length === 0 ? (
               <Alert severity="info" sx={{ mb: 2 }}>
                 No price data available for the selected time period.
