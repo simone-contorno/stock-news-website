@@ -174,40 +174,10 @@ async def get_stock_prices(symbol: str, period: str = "7d", db: Session = Depend
                 "volume": int(price.volume)
             } for price in prices]
         
-        # Otherwise, generate sample data that's unique for each stock symbol
-        # Use the stock symbol to generate a unique base price
-        symbol_hash = sum(ord(c) for c in symbol) % 100  # Simple hash of symbol for variety
-        base_price = 100.0 + symbol_hash
-        
-        # Add some randomness to make the data look more realistic
-        import random
-        random.seed(symbol_hash)  # Use symbol hash as seed for reproducibility
-        
-        sample_prices = []
-        for i in range(8):  # 8 days of data
-            # Create more realistic price movements
-            daily_change = random.uniform(-2.0, 2.0)
-            daily_price = base_price + (daily_change * (i+1))
-            daily_volatility = daily_price * 0.02  # 2% volatility
-            
-            sample_prices.append(StockPrice(
-                stock_id=stock.id,
-                timestamp=datetime.utcnow() - timedelta(days=7-i),
-                open=round(daily_price - random.uniform(-daily_volatility, daily_volatility), 2),
-                high=round(daily_price + daily_volatility, 2),
-                low=round(daily_price - daily_volatility, 2),
-                close=round(daily_price + random.uniform(-daily_volatility, daily_volatility), 2),
-                volume=int(1000000 + random.randint(-200000, 500000))
-            ))
-        db.add_all(sample_prices)
-        db.commit()
-        
-        # Return the sample prices
-        return [{
-            "timestamp": price.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-            "open": float(price.open),
-            "high": float(price.high),
-            "low": float(price.low),
-            "close": float(price.close),
-            "volume": int(price.volume)
-        } for price in sample_prices]
+        # If no existing prices and Yahoo Finance API failed, raise an error
+        import logging
+        logging.error(f"Error fetching stock data for {symbol}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve stock data from Yahoo Finance API: {str(e)}"
+        )

@@ -44,28 +44,15 @@ async def get_stock_news_summary(symbol: str, period: str = "7d", date: str = No
     try:
         price_data = get_stock_data(symbol, period)
         if not price_data or "data" not in price_data:
-            # If we can't get real price data, generate sample data for the summary
-            from datetime import datetime, timedelta
-            import random
-            
-            # Generate sample price data based on symbol
-            symbol_hash = sum(ord(c) for c in symbol) % 100
-            base_price = 100.0 + symbol_hash
-            random.seed(symbol_hash)
-            
-            price_history = []
-            for i in range(8):
-                daily_change = random.uniform(-2.0, 2.0)
-                daily_price = base_price + (daily_change * (i+1))
-                price_history.append({
-                    "timestamp": (datetime.utcnow() - timedelta(days=7-i)).strftime("%Y-%m-%d %H:%M:%S"),
-                    "close": round(daily_price, 2)
-                })
-        else:
-            price_history = price_data["data"]
+            # If we can't get real price data, return an error message
+            raise HTTPException(
+                status_code=500, 
+                detail="Failed to retrieve stock price data from Yahoo Finance API"
+            )
+        price_history = price_data["data"]
     except HTTPException as e:
         if e.status_code == 429:  # Rate limit error
-            # Generate sample data for rate limit case
+            # Return a proper error message for rate limit
             return {
                 "status": "rate_limit",
                 "message": "Yahoo Finance API rate limit reached",
@@ -75,26 +62,18 @@ async def get_stock_news_summary(symbol: str, period: str = "7d", date: str = No
             }
         raise e
     except Exception as e:
-        # Log the error but continue with sample data
+        # Log the error and return a proper error message
         import logging
         logging.error(f"Error fetching stock data: {str(e)}")
         
-        # Generate sample price data
-        from datetime import datetime, timedelta
-        import random
-        
-        symbol_hash = sum(ord(c) for c in symbol) % 100
-        base_price = 100.0 + symbol_hash
-        random.seed(symbol_hash)
-        
-        price_history = []
-        for i in range(8):
-            daily_change = random.uniform(-2.0, 2.0)
-            daily_price = base_price + (daily_change * (i+1))
-            price_history.append({
-                "timestamp": (datetime.utcnow() - timedelta(days=7-i)).strftime("%Y-%m-%d %H:%M:%S"),
-                "close": round(daily_price, 2)
-            })
+        # Return an error instead of generating sample data
+        return {
+            "status": "error",
+            "message": f"Failed to retrieve stock price data: {str(e)}",
+            "data": {
+                "formatted_text": f"<div class='error-message'><h2>Stock Data Error</h2><p>We couldn't retrieve the stock price data from Yahoo Finance: {str(e)}</p><p>Please try again later.</p></div>"
+            }
+        }
     
     # Generate summary using Together AI with better error handling
     try:
