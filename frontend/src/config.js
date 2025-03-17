@@ -32,14 +32,14 @@ if (isProduction) {
   // In production, use the load-balanced backend IPs
   if (window.location.hostname.includes('vercel.app')) {
     const backendIP = getBackendIP();
-    API_URL = `http://${backendIP}/api`; // Use the selected backend IP
+    API_URL = `https://${backendIP}/api`; // Use HTTPS instead of HTTP
   } else if (window.location.hostname.includes('render.com')) {
     // If we're on Render, use relative URL to ensure same-origin requests
     API_URL = '/api';
   } else {
     // Fallback to the load-balanced backend
     const backendIP = getBackendIP();
-    API_URL = `http://${backendIP}/api`;
+    API_URL = `https://${backendIP}/api`; // Use HTTPS instead of HTTP
   }
 } else {
   // Development environment

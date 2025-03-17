@@ -4,6 +4,8 @@ from .api import stocks, news, news_summary
 
 app = FastAPI()
 
+# Ensure the app is properly initialized
+
 # Configure CORS with origins from settings
 from .core.config import settings
 
@@ -23,3 +25,15 @@ app.include_router(news_summary.router, prefix="/api")
 @app.get("/")
 async def root():
     return {"message": "Welcome to Stock News API"}
+
+@app.get("/api")
+async def api_root():
+    return {
+        "message": "Stock News API",
+        "version": settings.VERSION,
+        "endpoints": [
+            "/api/stocks",
+            "/api/stocks/{symbol}/news",
+            "/api/stocks/{symbol}/news-summary"
+        ]
+    }
