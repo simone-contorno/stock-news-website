@@ -11,6 +11,7 @@ import { fetchStockPrices } from '../store/stocksSlice'
 import TimeRangeSelector from '../components/TimeRangeSelector'
 import NewsSection from '../components/NewsSection'
 import NewsSummary from '../components/NewsSummary'
+import ErrorMessage from '../components/ErrorMessage'
 import { API_URL } from '../config'
 
 // Initialize Highcharts modules
