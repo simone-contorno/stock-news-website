@@ -51,8 +51,6 @@ const Dashboard = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <ErrorMessage 
           title="Network Error" 
-          message="Unable to establish connection with the server." 
-          onRetry={() => dispatch(fetchStocks())}
         />
       </Container>
     )

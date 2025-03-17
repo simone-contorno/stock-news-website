@@ -448,7 +448,6 @@ const StockDetail = () => {
               <ErrorMessage 
             title="Network Error" 
             message={`Error loading stock prices: ${pricesError || 'Graph temporarily not available'}`}
-            onRetry={() => dispatch(fetchStockPrices({ symbol, period: selectedPeriod }))}
           />
             ) : !stockPrices || stockPrices.length === 0 ? (
               <Alert severity="info" sx={{ mb: 2 }}>
