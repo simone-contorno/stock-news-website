@@ -11,6 +11,7 @@ import { fetchStockPrices } from '../store/stocksSlice'
 import TimeRangeSelector from '../components/TimeRangeSelector'
 import NewsSection from '../components/NewsSection'
 import NewsSummary from '../components/NewsSummary'
+import { API_URL } from '../config'
 
 // Initialize Highcharts modules
 exporting(Highcharts)
@@ -59,7 +60,7 @@ const StockDetail = () => {
     setNewsLoading(true)
     setNewsLoaded(false)
     
-    fetch(`http://localhost:8000/api/stocks/${symbol}/news?period=${selectedPeriod}`)
+    fetch(`${API_URL}/stocks/${symbol}/news?period=${selectedPeriod}`)
       .then(response => {
         if (!response.ok) {
           if (response.status === 429) {
@@ -106,7 +107,7 @@ const StockDetail = () => {
     setSummaryError(null)
     setNewsSummary(null)
     
-    fetch(`http://localhost:8000/api/stocks/${symbol}/news-summary?period=${selectedPeriod}`)
+    fetch(`${API_URL}/stocks/${symbol}/news-summary?period=${selectedPeriod}`)
       .then(response => {
         if (!response.ok) {
           if (response.status === 429) {
@@ -148,7 +149,7 @@ const StockDetail = () => {
       setNewsLoaded(false);
       setNewsError(false);
       
-      const newsResponse = await fetch(`http://localhost:8000/api/stocks/${symbol}/news?date=${formattedDate}`);
+      const newsResponse = await fetch(`${API_URL}/stocks/${symbol}/news?date=${formattedDate}`);
       
       if (!newsResponse.ok) {
         if (newsResponse.status === 429) {
@@ -182,7 +183,7 @@ const StockDetail = () => {
       nextDay.setDate(nextDay.getDate() + 1);
       const offsetFormattedDate = nextDay.toISOString().split('T')[0];
       
-      const summaryResponse = await fetch(`http://localhost:8000/api/stocks/${symbol}/news-summary?date=${offsetFormattedDate}`);
+      const summaryResponse = await fetch(`${API_URL}/stocks/${symbol}/news-summary?date=${offsetFormattedDate}`);
       
       if (!summaryResponse.ok) {
         if (summaryResponse.status === 429) {
