@@ -107,29 +107,15 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
             
             return {
                 "symbol": symbol,
-                "period": period,
-                "data": formatted_data
+                "data": processed_data
             }
             
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Unexpected error processing stock data for {symbol}: {str(e)}")
-            
-            # If this is the last retry, raise an exception
             if attempt == max_retries - 1:
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Failed to process stock data: {str(e)}"
+                    detail=f"Failed to fetch stock data after {max_retries} attempts: {str(e)}"
                 )
-            
-            # Otherwise, retry after delay
-            sleep(retry_delay)
-            continue
-    
-    # If we've exhausted all retries
-    logger.error(f"All {max_retries} retry attempts failed for {symbol}")
-    raise HTTPException(
-        status_code=500,
-        detail="Failed to retrieve stock data after multiple attempts"
-    )
+            sleep(retry_delay * (attempt + 1))
