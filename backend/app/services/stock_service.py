@@ -22,8 +22,8 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
             detail=f"Invalid period: {period}. Valid periods are: {', '.join(period_mapping.keys())}"
         )
     
-    max_retries = 3
-    retry_delay = 1
+    max_retries = 5  # Increased from 3 to 5
+    retry_delay = 2  # Increased from 1 to 2
 
     for attempt in range(max_retries):
         try:
