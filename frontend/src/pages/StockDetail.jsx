@@ -21,10 +21,6 @@ offlineExporting(Highcharts)
 const StockDetail = () => {
   const { symbol } = useParams()
   const dispatch = useDispatch()
-  // Add stock selector from Redux store
-  const stockDetails = useSelector((state) => 
-    state.stocks.list.find(s => s.symbol === symbol || s.yahoo_symbol === symbol)
-  )
   const [selectedPeriod, setSelectedPeriod] = useState('7d')
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date()
@@ -395,18 +391,6 @@ const StockDetail = () => {
     setIsDateSelected(false);
   }, [selectedPeriod]);
 
-  // Add warning for missing stock details
-  if (!stockDetails) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <ErrorMessage 
-          title="Stock Not Found"
-          message={`Could not find details for symbol: ${symbol}`}
-        />
-      </Container>
-    )
-  }
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Fade in={true} timeout={500}>
@@ -443,7 +427,7 @@ const StockDetail = () => {
                   variant="outlined"
                   size="small"
                   endIcon={<OpenInNewIcon />}
-                  href={`https://finance.yahoo.com/quote/${stockDetails.yahoo_symbol || symbol}`}
+                  href={`https://finance.yahoo.com/quote/${symbol}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   sx={{ textTransform: 'none' }}
