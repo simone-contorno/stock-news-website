@@ -3,6 +3,7 @@ import { Link as RouterLink } from 'react-router-dom'
 import { AppBar, Toolbar, Typography, Link, Box, Container, IconButton, Menu, MenuItem, useTheme, useMediaQuery } from '@mui/material'
 import ShowChartIcon from '@mui/icons-material/ShowChart'
 import MenuIcon from '@mui/icons-material/Menu'
+import ThemeToggle from './ThemeToggle'
 
 const Navbar = () => {
   const [anchorEl, setAnchorEl] = useState(null)
@@ -69,7 +70,8 @@ const Navbar = () => {
           </Box>
 
           {isMobile ? (
-            <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ThemeToggle />
               <IconButton
                 size="large"
                 edge="end"
@@ -107,7 +109,7 @@ const Navbar = () => {
               </Menu>
             </Box>
           ) : (
-            <Box sx={{ display: 'flex', gap: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               {navItems.map((item) => (
                 <Link
                   key={item.text}
@@ -124,6 +126,7 @@ const Navbar = () => {
                   {item.text}
                 </Link>
               ))}
+              <ThemeToggle />
             </Box>
           )}
         </Toolbar>

@@ -1,19 +1,18 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { Box } from '@mui/material'
-import theme from './theme'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Dashboard from './pages/Dashboard'
 import StockDetail from './pages/StockDetail'
 import Indices from './pages/Indices'
 import Contact from './pages/Contact'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider>
       <CssBaseline />
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Navbar />
