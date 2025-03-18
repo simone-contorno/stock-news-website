@@ -1,88 +1,108 @@
-import yfinance as yf
+import requests
 from datetime import datetime, timedelta
-from typing import List, Dict
-from time import sleep
+from typing import Dict
 from fastapi import HTTPException
+from time import sleep
+from ..core.config import settings
 
 def get_stock_data(symbol: str, period: str = "7d") -> Dict:
-    # Map API periods to yfinance periods
-    period_mapping = {
-        "7d": "7d",
-        "1mo": "1mo",
-        "1y": "1y",
-        "3y": "3y",
-        "5y": "5y",
-        "max": "max"
-    }
-    
-    yf_period = period_mapping.get(period)
-    if not yf_period:
+    if not settings.ALPHA_VANTAGE_API_KEY:
         raise HTTPException(
-            status_code=400,
-            detail=f"Invalid period: {period}. Valid periods are: {', '.join(period_mapping.keys())}"
+            status_code=500,
+            detail="ALPHA_VANTAGE_API_KEY environment variable is not configured"
         )
     
-    max_retries = 3
+    # Map API periods to Alpha Vantage functions and intervals
+    period_mapping = {
+        "7d": ("TIME_SERIES_DAILY", "Daily"),
+        "1mo": ("TIME_SERIES_DAILY", "Daily"),
+        "1y": ("TIME_SERIES_DAILY", "Daily"),
+        "3y": ("TIME_SERIES_DAILY", "Daily"),
+        "5y": ("TIME_SERIES_WEEKLY", "Weekly"),
+        "max": ("TIME_SERIES_MONTHLY", "Monthly")
+    }
+    
+    function, interval = period_mapping.get(period, ("TIME_SERIES_DAILY", "Daily"))
+    
+    params = {
+        "function": function,
+        "symbol": symbol.replace("^", ""),  # Remove ^ from indices symbols
+        "apikey": settings.ALPHA_VANTAGE_API_KEY
+    }
+    
+    if function == "TIME_SERIES_DAILY":
+        params["outputsize"] = "full"  # Get full data for daily series
+    
+    max_retries = settings.ALPHA_VANTAGE_MAX_RETRIES
     retry_delay = 1
-
+    
     for attempt in range(max_retries):
         try:
-            ticker = yf.Ticker(symbol)
+            response = requests.get(
+                settings.ALPHA_VANTAGE_BASE_URL,
+                params=params,
+                timeout=settings.ALPHA_VANTAGE_TIMEOUT
+            )
             
-            # Validate the symbol first
-            if not ticker.info or 'regularMarketPrice' not in ticker.info:
+            if response.status_code == 429:
+                raise HTTPException(
+                    status_code=429,
+                    detail="Alpha Vantage API rate limit reached"
+                )
+            
+            response.raise_for_status()
+            data = response.json()
+            
+            # Check for error messages
+            if "Error Message" in data:
                 raise HTTPException(
                     status_code=404,
                     detail=f"Invalid stock symbol: {symbol}"
                 )
             
-            # Get historical data with error handling
-            try:
-                hist = ticker.history(period=yf_period)
-            except Exception as hist_error:
+            # Get the time series data key based on the function
+            time_series_key = f"Time Series ({interval})"
+            if time_series_key not in data:
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Error fetching historical data: {str(hist_error)}"
+                    detail="Invalid response format from Alpha Vantage"
                 )
             
-            if hist.empty:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"No data available for {symbol} in the specified period"
-                )
+            time_series = data[time_series_key]
             
-            # Ensure all required columns are present
-            required_columns = ["Open", "High", "Low", "Close", "Volume"]
-            missing_columns = [col for col in required_columns if col not in hist.columns]
-            if missing_columns:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Missing required data columns: {', '.join(missing_columns)}"
-                )
-            
-            # Process and validate each data point
+            # Convert data to our standard format
             processed_data = []
-            for index, row in hist.iterrows():
+            for date, values in time_series.items():
                 try:
-                    data_point = {
-                        "timestamp": index.strftime("%Y-%m-%d %H:%M:%S"),
-                        "open": float(row["Open"]),
-                        "high": float(row["High"]),
-                        "low": float(row["Low"]),
-                        "close": float(row["Close"]),
-                        "volume": int(row["Volume"])
+                    price_data = {
+                        "timestamp": date + " 00:00:00",
+                        "open": float(values["1. open"]),
+                        "high": float(values["2. high"]),
+                        "low": float(values["3. low"]),
+                        "close": float(values["4. close"]),
+                        "volume": int(float(values["5. volume"]))
                     }
-                    # Basic data validation
-                    if any(value <= 0 for value in [data_point["open"], data_point["high"], data_point["low"], data_point["close"]]):
-                        continue  # Skip invalid data points
-                    processed_data.append(data_point)
-                except (ValueError, TypeError) as e:
-                    continue  # Skip malformed data points
+                    processed_data.append(price_data)
+                except (ValueError, KeyError) as e:
+                    continue
+            
+            # Sort by date and filter based on period
+            processed_data.sort(key=lambda x: x["timestamp"])
+            if period == "7d":
+                processed_data = processed_data[-7:]
+            elif period == "1mo":
+                processed_data = processed_data[-30:]
+            elif period == "1y":
+                processed_data = processed_data[-365:]
+            elif period == "3y":
+                processed_data = processed_data[-1095:]
+            elif period == "5y":
+                processed_data = processed_data[-1825:]
             
             if not processed_data:
                 raise HTTPException(
-                    status_code=500,
-                    detail=f"No valid data points found for {symbol}"
+                    status_code=404,
+                    detail=f"No data available for {symbol}"
                 )
             
             return {
@@ -90,9 +110,8 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
                 "data": processed_data
             }
             
-        except HTTPException as http_error:
-            # Re-raise HTTP exceptions immediately
-            raise http_error
+        except HTTPException:
+            raise
         except Exception as e:
             if attempt == max_retries - 1:
                 raise HTTPException(
