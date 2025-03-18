@@ -50,8 +50,28 @@ async def get_stock_news_summary(symbol: str, period: str = "7d", date: str = No
                 })
         else:
             price_history = price_data["data"]
+            # If we can't get real price data, generate sample data for the summary
+            from datetime import datetime, timedelta
+            import random
+            
+            # Generate sample price data based on symbol
+            symbol_hash = sum(ord(c) for c in symbol) % 100
+            base_price = 100.0 + symbol_hash
+            random.seed(symbol_hash)
+            
+            price_history = []
+            for i in range(8):
+                daily_change = random.uniform(-2.0, 2.0)
+                daily_price = base_price + (daily_change * (i+1))
+                price_history.append({
+                    "timestamp": (datetime.utcnow() - timedelta(days=7-i)).strftime("%Y-%m-%d %H:%M:%S"),
+                    "close": round(daily_price, 2)
+                })
+        else:
+            price_history = price_data["data"]
     except HTTPException as e:
         if e.status_code == 429:  # Rate limit error
+            # Generate sample data for rate limit case
             # Generate sample data for rate limit case
             return {
                 "status": "rate_limit",
@@ -63,9 +83,26 @@ async def get_stock_news_summary(symbol: str, period: str = "7d", date: str = No
         raise e
     except Exception as e:
         # Log the error but continue with sample data
+        # Log the error but continue with sample data
         import logging
         logging.error(f"Error fetching stock data: {str(e)}")
         
+        # Generate sample price data
+        from datetime import datetime, timedelta
+        import random
+        
+        symbol_hash = sum(ord(c) for c in symbol) % 100
+        base_price = 100.0 + symbol_hash
+        random.seed(symbol_hash)
+        
+        price_history = []
+        for i in range(8):
+            daily_change = random.uniform(-2.0, 2.0)
+            daily_price = base_price + (daily_change * (i+1))
+            price_history.append({
+                "timestamp": (datetime.utcnow() - timedelta(days=7-i)).strftime("%Y-%m-%d %H:%M:%S"),
+                "close": round(daily_price, 2)
+            })
         # Generate sample price data
         from datetime import datetime, timedelta
         import random
