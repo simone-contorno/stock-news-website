@@ -118,10 +118,11 @@ async def get_stocks(db: Session = Depends(get_db)):
 
 @router.get("/stocks/{symbol}/prices")
 async def get_stock_prices(symbol: str, period: str = "7d", db: Session = Depends(get_db)):
-    stock = db.query(Stock).filter(Stock.symbol == symbol).first()
+    # First try to find stock by yahoo_symbol
+    stock = db.query(Stock).filter(Stock.yahoo_symbol == symbol).first()
     if not stock:
-        # Try finding by Yahoo symbol
-        stock = db.query(Stock).filter(Stock.yahoo_symbol == symbol).first()
+        # Try finding by Alpha Vantage symbol as fallback
+        stock = db.query(Stock).filter(Stock.symbol == symbol).first()
         if not stock:
             raise HTTPException(status_code=404, detail="Stock not found")
     
@@ -132,6 +133,7 @@ async def get_stock_prices(symbol: str, period: str = "7d", db: Session = Depend
     
     # Get real stock data from Yahoo Finance
     try:
+        # Pass the yahoo_symbol to get_stock_data
         stock_data = get_stock_data(symbol, period=period)
         
         # Clear existing prices for this stock
