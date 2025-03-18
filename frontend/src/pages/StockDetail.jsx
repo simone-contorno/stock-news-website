@@ -21,6 +21,10 @@ offlineExporting(Highcharts)
 const StockDetail = () => {
   const { symbol } = useParams()
   const dispatch = useDispatch()
+  // Add stock selector from Redux store
+  const stockDetails = useSelector((state) => 
+    state.stocks.list.find(s => s.symbol === symbol)
+  )
   const [selectedPeriod, setSelectedPeriod] = useState('7d')
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date()

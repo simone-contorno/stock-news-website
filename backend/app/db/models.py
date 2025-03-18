@@ -8,7 +8,7 @@ class Stock(Base):
     __tablename__ = "stocks"
     
     id = Column(Integer, primary_key=True, index=True)
-    symbol = Column(String, unique=True, index=True)
+    symbol = Column(String, unique=True, index=True)  # Yahoo Finance symbol
     name = Column(String)
     category = Column(String, default='stock')  # 'major', 'minor'
     region = Column(String, default='US')
