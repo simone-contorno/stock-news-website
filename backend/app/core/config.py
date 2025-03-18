@@ -34,12 +34,6 @@ class Settings:
         "*"  # Allow all origins in production for load balancing
     ]
 
-    # Alpha Vantage Configuration
-    ALPHA_VANTAGE_API_KEY: str = os.getenv('ALPHA_VANTAGE_API_KEY')
-    ALPHA_VANTAGE_BASE_URL: str = "https://www.alphavantage.co/query"
-    ALPHA_VANTAGE_MAX_RETRIES: int = 3
-    ALPHA_VANTAGE_TIMEOUT: int = 10
-
     # News API Configuration
     NEWS_API_KEY: str = os.getenv('NEWS_API_KEY')
     NEWS_API_BASE_URL: str = "https://newsapi.org/v2/everything"
