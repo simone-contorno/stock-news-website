@@ -23,7 +23,7 @@ const StockDetail = () => {
   const dispatch = useDispatch()
   // Add stock selector from Redux store
   const stockDetails = useSelector((state) => 
-    state.stocks.list.find(s => s.symbol === symbol || s.yahoo_symbol === symbol)
+    state.stocks.list.find(s => s.symbol === symbol)
   )
   const [selectedPeriod, setSelectedPeriod] = useState('7d')
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -443,7 +443,7 @@ const StockDetail = () => {
                   variant="outlined"
                   size="small"
                   endIcon={<OpenInNewIcon />}
-                  href={`https://finance.yahoo.com/quote/${stockDetails.yahoo_symbol || symbol}`}
+                  href={`https://finance.yahoo.com/quote/${symbol}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   sx={{ textTransform: 'none' }}
