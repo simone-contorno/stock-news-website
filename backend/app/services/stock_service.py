@@ -33,8 +33,8 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
     
     # If we have all the data we need, return it immediately
     if not cached_data["missing_dates"]:
-        logger.info(f"Using cached data for {symbol} with period {period} - No API call needed")
-        logger.info(f"Found {len(cached_data['data'])} data points in cache")
+        #logger.info(f"Using cached data for {symbol} with period {period} - No API call needed")
+        #logger.info(f"Found {len(cached_data['data'])} data points in cache")
         return {
             "symbol": symbol,
             "data": cached_data["data"]
