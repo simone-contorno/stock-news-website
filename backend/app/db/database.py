@@ -6,7 +6,7 @@ from .models import Base
 import os
 
 # SQLite setup
-db_path = "stocknews.db"
+db_path = "stock_news.db"
 
 # Only reset the database in development mode
 if not settings.IS_PRODUCTION and os.path.exists(db_path):

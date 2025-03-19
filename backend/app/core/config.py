@@ -13,7 +13,7 @@ class Settings:
     
     # Database configurations
     # Use SQLite for local development, but allow override via env var for production
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./stocknews.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./stock_news.db")
     
     # MongoDB configuration with environment-specific defaults
     MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017")

@@ -122,7 +122,7 @@ A web application that displays daily performance of stock indices and individua
 
 ## Development Notes
 
-- The backend uses SQLite for development through `stocknews.db` file which:
+- The backend uses SQLite for development through `stock_news.db` file which:
   - Stores stock information (symbols and names)
   - Caches stock price history data
   - Stores news articles related to stocks
@@ -130,7 +130,7 @@ A web application that displays daily performance of stock indices and individua
     - `stocks`: Basic stock information (id, symbol, name)
     - `stock_prices`: Historical price data (open, high, low, close, volume)
     - `stock_news`: News articles with metadata (title, description, url, source)
-  - Located at `backend/stocknews.db` (auto-created on first run)
+  - Located at `backend/stock_news.db` (auto-created on first run)
   - Serves as a local cache to reduce API calls
 - Stock data is fetched from Yahoo Finance API through the `yfinance` library
 - News data is fetched from News API with rate limiting (1000 requests per day for free tier)
