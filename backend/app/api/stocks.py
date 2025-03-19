@@ -127,40 +127,58 @@ async def get_stock_prices(symbol: str, period: str = "7d", db: Session = Depend
     if period not in valid_periods:
         raise HTTPException(status_code=400, detail=f"Invalid period. Must be one of: {', '.join(valid_periods)}")
     
-    # Get real stock data from Yahoo Finance
+    # Get stock data from cache or Yahoo Finance if needed
     try:
-        # Pass the yahoo_symbol to get_stock_data
+        # Pass the symbol to get_stock_data which will use cache when available
         stock_data = get_stock_data(symbol, period=period)
         
-        # Clear existing prices for this stock
-        db.query(StockPrice).filter(StockPrice.stock_id == stock.id).delete()
+        # Check if we already have prices for this stock and period in the database
+        existing_prices = db.query(StockPrice).filter(StockPrice.stock_id == stock.id).all()
         
-        # Add new price data
-        new_prices = []
-        for price_data in stock_data["data"]:
-            new_price = StockPrice(
-                stock_id=stock.id,
-                timestamp=datetime.strptime(price_data["timestamp"], "%Y-%m-%d %H:%M:%S"),
-                open=price_data["open"],
-                high=price_data["high"],
-                low=price_data["low"],
-                close=price_data["close"],
-                volume=price_data["volume"]
-            )
-            new_prices.append(new_price)
-        
-        db.add_all(new_prices)
-        db.commit()
+        # Only clear and update if we have new data or no existing data
+        if not existing_prices or len(existing_prices) != len(stock_data["data"]):
+            # Clear existing prices for this stock
+            db.query(StockPrice).filter(StockPrice.stock_id == stock.id).delete()
+            
+            # Add new price data
+            new_prices = []
+            for price_data in stock_data["data"]:
+                new_price = StockPrice(
+                    stock_id=stock.id,
+                    timestamp=datetime.strptime(price_data["timestamp"], "%Y-%m-%d %H:%M:%S"),
+                    open=price_data["open"],
+                    high=price_data["high"],
+                    low=price_data["low"],
+                    close=price_data["close"],
+                    volume=price_data["volume"]
+                )
+                new_prices.append(new_price)
+            
+            db.add_all(new_prices)
+            db.commit()
         
         # Return serialized data
-        return [{
-            "timestamp": price.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-            "open": float(price.open),
-            "high": float(price.high),
-            "low": float(price.low),
-            "close": float(price.close),
-            "volume": int(price.volume)
-        } for price in new_prices]
+        if 'new_prices' in locals():
+            # If we just updated the database, return the new prices
+            return [{
+                "timestamp": price.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "open": float(price.open),
+                "high": float(price.high),
+                "low": float(price.low),
+                "close": float(price.close),
+                "volume": int(price.volume)
+            } for price in new_prices]
+        else:
+            # If we're using cached data without updating the database, query the prices
+            prices = db.query(StockPrice).filter(StockPrice.stock_id == stock.id).all()
+            return [{
+                "timestamp": price.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "open": float(price.open),
+                "high": float(price.high),
+                "low": float(price.low),
+                "close": float(price.close),
+                "volume": int(price.volume)
+            } for price in prices]
     except Exception as e:
         # If there's an error, check if we have existing prices in the database
         prices = db.query(StockPrice).filter(StockPrice.stock_id == stock.id).all()
