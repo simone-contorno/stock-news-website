@@ -1,16 +1,26 @@
-import React, { useState } from 'react'
-import { useSelector } from 'react-redux'
+import React, { useState, useEffect } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { 
   Container, Grid, Card, CardContent, Typography, Box,
-  Tabs, Tab, Paper, Divider
+  Tabs, Tab, Paper, Divider, CircularProgress
 } from '@mui/material'
 import SearchBar from '../components/SearchBar'
+import { fetchStocks } from '../store/stocksSlice'
+import ErrorMessage from '../components/ErrorMessage'
 
 const Indices = () => {
-  const { list: stocks } = useSelector((state) => state.stocks)
+  const dispatch = useDispatch()
+  const { list: stocks, status, error } = useSelector((state) => state.stocks)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+
+  // Fetch stocks when component mounts if they're not already loaded
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatch(fetchStocks())
+    }
+  }, [status, dispatch])
 
   // Group stocks by category
   const categories = {
@@ -25,6 +35,25 @@ const Indices = () => {
     const matchesCategory = selectedCategory === 'all' || stock.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  // Show loading indicator when initially fetching the stock list
+  if (status === 'loading') {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+        <CircularProgress size={60} thickness={4} />
+      </Box>
+    )
+  }
+
+  if (status === 'failed') {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <ErrorMessage 
+          title="Network Error" 
+        />
+      </Container>
+    )
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
