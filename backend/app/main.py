@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .api import stocks, news, news_summary
 import logging
+from .core.middleware import SequentialRequestMiddleware
 
 # Configure logging
 logging.basicConfig(
