@@ -12,6 +12,7 @@ const Dashboard = () => {
   const dispatch = useDispatch()
   const { list: stocks, status, error } = useSelector((state) => state.stocks)
   const prices = useSelector((state) => state.stocks.prices)
+   const pricesStatus = useSelector((state) => state.stocks.pricesStatus)
 
   // Filter stocks for the dashboard display
   const dashboardStocks = stocks.filter(stock => {
@@ -26,18 +27,35 @@ const Dashboard = () => {
     return false;
   });
 
+  // Function to fetch stock prices sequentially
+  const fetchStockPricesSequentially = async (stocksList) => {
+    for (const stock of stocksList) {
+      // Check if we already have data or if it's currently loading
+      const hasData = prices[stock.symbol]?.['7d']?.length > 0;
+      const isLoading = pricesStatus[stock.symbol]?.['7d'] === 'loading';
+      const hasSucceeded = pricesStatus[stock.symbol]?.['7d'] === 'succeeded';
+      
+      // Only fetch if we don't have data, it's not loading, and hasn't already succeeded
+      if (!hasData && !isLoading && !hasSucceeded) {
+        await dispatch(fetchStockPrices({ symbol: stock.symbol, period: '7d' }))
+      }
+    }
+  }
+
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchStocks())
     }
-    // Fetch initial prices only for dashboard stocks
-    dashboardStocks.forEach(stock => {
-      if (!prices[stock.symbol]) {
-        dispatch(fetchStockPrices({ symbol: stock.symbol, period: '7d' }))
-      }
-    })
-  }, [status, dispatch, dashboardStocks, prices])
+  }, [status, dispatch])
 
+  // Start fetching stock prices once we have the stock list
+  useEffect(() => {
+    if (dashboardStocks.length > 0) {
+      fetchStockPricesSequentially(dashboardStocks)
+    }
+  }, [dashboardStocks, prices, pricesStatus]) // Add dependencies to prevent unnecessary fetches
+
+  // Show loading indicator only when initially fetching the stock list
   if (status === 'loading') {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
@@ -94,6 +112,8 @@ const Dashboard = () => {
         >
           {dashboardStocks.map((stock) => {
             const change = getStockChange(stock.symbol)
+            const isLoading = !pricesStatus[stock.symbol] || pricesStatus[stock.symbol]['7d'] === 'loading'
+            
             return (
               <Box
                 key={stock.symbol}
@@ -108,7 +128,11 @@ const Dashboard = () => {
                 <Typography variant="h6" sx={{ color: 'text.secondary' }}>
                   {stock.name}
                 </Typography>
-                {change && (
+                {isLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                    <CircularProgress size={24} thickness={4} />
+                  </Box>
+                ) : change ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                     {change.isPositive ? 
                       <TrendingUpIcon sx={{ color: change.color }} /> : 
@@ -118,6 +142,10 @@ const Dashboard = () => {
                       {change.value}%
                     </Typography>
                   </Box>
+                ) : (
+                  <Typography sx={{ color: 'text.secondary' }}>
+                    No data available
+                  </Typography>
                 )}
               </Box>
             )
