@@ -3,11 +3,22 @@ from datetime import datetime, timedelta
 from typing import List, Dict
 from time import sleep
 import logging
+import random
 from fastapi import HTTPException
 from .stock_values_db import get_cached_stock_data, store_stock_data
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+# Rate limiting settings
+MAX_RETRIES = 3
+BASE_DELAY = 2  # Base delay in seconds
+JITTER = 0.5    # Random jitter to add to delay
+
+# Rate limiting settings
+MAX_RETRIES = 3
+BASE_DELAY = 2  # Base delay in seconds
+JITTER = 0.5    # Random jitter to add to delay
 
 def get_stock_data(symbol: str, period: str = "7d") -> Dict:
     # Map API periods to yfinance periods
@@ -43,13 +54,17 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
     # If we have missing dates, fetch only those from Yahoo Finance
     logger.info(f"Found {len(cached_data['missing_dates'])} missing dates for {symbol}")
     
-    max_retries = 1
-    retry_delay = 1
-    
     # If we have some missing dates, fetch them from Yahoo Finance
     if cached_data["missing_dates"]:
-        for attempt in range(max_retries):
+        for attempt in range(MAX_RETRIES):
             try:
+                # Calculate exponential backoff with jitter for retries
+                if attempt > 0:
+                    # Exponential backoff: BASE_DELAY * 2^attempt + random jitter
+                    delay = BASE_DELAY * (2 ** (attempt - 1)) + (random.random() * JITTER)
+                    logger.info(f"Retry attempt {attempt+1}/{MAX_RETRIES} for {symbol} after {delay:.2f}s delay")
+                    sleep(delay)
+                
                 ticker = yf.Ticker(symbol)
                 
                 # Validate the symbol first
@@ -63,7 +78,21 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
                                 detail=f"Invalid stock symbol: {symbol}"
                             )
                 except Exception as info_error:
-                    logger.warning(f"Error fetching ticker info for {symbol}: {str(info_error)}")
+                    # Check specifically for rate limit errors (429)
+                    error_str = str(info_error)
+                    if "429" in error_str and "Too Many Requests" in error_str:
+                        logger.warning(f"Rate limit reached when fetching ticker info for {symbol}: {error_str}")
+                        if attempt < MAX_RETRIES - 1:
+                            continue  # Try again with backoff
+                        elif cached_data["data"]:
+                            # Return cached data if we have any
+                            logger.warning(f"Returning cached data for {symbol} due to rate limiting")
+                            return {
+                                "symbol": symbol,
+                                "data": cached_data["data"]
+                            }
+                    else:
+                        logger.warning(f"Error fetching ticker info for {symbol}: {error_str}")
                     # Continue anyway and try to get historical data
                 
                 # Get historical data with error handling
@@ -71,9 +100,24 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
                     logger.info(f"Retrieving historical data for {symbol} with period {yf_period}")
                     hist = ticker.history(period=yf_period)
                 except Exception as hist_error:
+                    error_str = str(hist_error)
+                    # Check for rate limit errors in historical data fetch
+                    if "429" in error_str or "Too Many Requests" in error_str:
+                        logger.warning(f"Rate limit reached when fetching historical data for {symbol}: {error_str}")
+                        if attempt < MAX_RETRIES - 1:
+                            continue  # Try again with backoff
+                        elif cached_data["data"]:
+                            # Return cached data if we have any
+                            logger.warning(f"Returning cached data for {symbol} due to rate limiting")
+                            return {
+                                "symbol": symbol,
+                                "data": cached_data["data"]
+                            }
+                    
+                    # For other errors, raise HTTP exception
                     raise HTTPException(
                         status_code=500,
-                        detail=f"Error fetching historical data: {str(hist_error)}"
+                        detail=f"Error fetching historical data: {error_str}"
                     )
                 
                 if hist.empty:
@@ -147,8 +191,8 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
                 # Re-raise HTTP exceptions immediately
                 raise http_error
             except Exception as e:
-                if attempt == max_retries - 1:
-                    logger.error(f"Failed to fetch data for {symbol} after {max_retries} attempts: {str(e)}")
+                if attempt == MAX_RETRIES - 1:
+                    logger.error(f"Failed to fetch data for {symbol} after {MAX_RETRIES} attempts: {str(e)}")
                     # If we have some cached data, return that instead of failing
                     if cached_data["data"]:
                         logger.warning(f"Returning partial cached data for {symbol} due to API error")
@@ -159,9 +203,8 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
                     else:
                         raise HTTPException(
                             status_code=500,
-                            detail=f"Failed to fetch stock data after {max_retries} attempts: {str(e)}"
+                            detail=f"Failed to fetch stock data after {MAX_RETRIES} attempts: {str(e)}"
                         )
-                sleep(retry_delay * (attempt + 1))
     
     # This should never be reached, but just in case
     return {
