@@ -17,4 +17,4 @@ gunicorn==23.0.0
 requests-cache==1.1.0
 tzlocal==5.0.1
 pytz==2023.3
-certifi==2023.7.22
+certifi==2024.7.4
