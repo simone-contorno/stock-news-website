@@ -1,4 +1,4 @@
-# Stock News Website with Interactive Graphs
+# AI Stock News Website 
 
 A web application that displays daily performance of stock indices and individual stocks using interactive graphs, along with relevant news articles that may influence market movements. The system leverages artificial intelligence to combine news sentiment analysis with stock price data, enabling more accurate market evaluation and predictive insights. This innovative approach helps users identify correlations between financial news and market movements, providing a comprehensive tool for investment decision-making. This project has been entirely developed using AI Clause 3.7-Sonnet to explore the potentiality of AI today for web development.
 
