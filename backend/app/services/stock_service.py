@@ -11,12 +11,7 @@ from .stock_values_db import get_cached_stock_data, store_stock_data
 logger = logging.getLogger(__name__)
 
 # Rate limiting settings
-MAX_RETRIES = 3
-BASE_DELAY = 2  # Base delay in seconds
-JITTER = 0.5    # Random jitter to add to delay
-
-# Rate limiting settings
-MAX_RETRIES = 3
+MAX_RETRIES = 1
 BASE_DELAY = 2  # Base delay in seconds
 JITTER = 0.5    # Random jitter to add to delay
 
@@ -65,6 +60,8 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
                     logger.info(f"Retry attempt {attempt+1}/{MAX_RETRIES} for {symbol} after {delay:.2f}s delay")
                     sleep(delay)
                 
+                # Make a single API call to Yahoo Finance for all missing dates
+                logger.info(f"Making a single API call to Yahoo Finance for {symbol} with period {yf_period}")
                 ticker = yf.Ticker(symbol)
                 
                 # Validate the symbol first
@@ -95,7 +92,7 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
                         logger.warning(f"Error fetching ticker info for {symbol}: {error_str}")
                     # Continue anyway and try to get historical data
                 
-                # Get historical data with error handling
+                # Get all historical data in a single call with error handling
                 try:
                     logger.info(f"Retrieving historical data for {symbol} with period {yf_period}")
                     hist = ticker.history(period=yf_period)

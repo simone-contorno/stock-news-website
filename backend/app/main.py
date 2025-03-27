@@ -31,6 +31,10 @@ app.add_middleware(
     max_age=600,  # Cache preflight requests for 10 minutes
 )
 
+# Add sequential request middleware to ensure only one request is processed at a time
+# This helps reduce the number of Yahoo Finance API calls
+app.add_middleware(SequentialRequestMiddleware)
+
 # Include routers
 app.include_router(stocks.router, prefix="/api")
 app.include_router(news.router, prefix="/api")

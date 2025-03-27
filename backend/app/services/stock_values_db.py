@@ -87,6 +87,7 @@ def get_cached_stock_data(symbol: str, period: str) -> Dict:
     """
     Retrieve stock data from the database for the given symbol and period.
     Returns a dictionary with the data and a list of missing dates.
+    Optimized to reduce the need for Yahoo Finance API calls.
     """
     table_name = ensure_stock_table_exists(symbol)
     start_date, end_date = get_date_range_for_period(period)
@@ -98,7 +99,8 @@ def get_cached_stock_data(symbol: str, period: str) -> Dict:
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Get all dates in the range from the database
+    # Get all dates in the range from the database, including NULL entries
+    # This helps us identify which dates we've already tried to fetch but were unavailable
     cursor.execute(f"""
     SELECT date, open, high, low, close, volume 
     FROM {table_name} 
@@ -112,13 +114,15 @@ def get_cached_stock_data(symbol: str, period: str) -> Dict:
     # Process the data
     processed_data = []
     cached_dates = set()
+    null_dates = set()  # Dates we've already tried but had no data
     
     for row in rows:
         # Add all dates to cached_dates, whether they have data or not
         cached_dates.add(row['date'])
         
-        # Skip entries where close is NULL (indicating data not available from API)
+        # Track dates with NULL values separately
         if row['close'] is None:
+            null_dates.add(row['date'])
             continue
             
         data_point = {
@@ -135,10 +139,11 @@ def get_cached_stock_data(symbol: str, period: str) -> Dict:
     all_dates = set()
     current_date = start_date
     while current_date <= end_date:
-        all_dates.add(current_date.strftime("%Y-%m-%d"))
+        date_str = current_date.strftime("%Y-%m-%d")
+        all_dates.add(date_str)
         current_date += timedelta(days=1)
     
-    # Find missing dates
+    # Find truly missing dates (not in cache and not previously marked as unavailable)
     missing_dates = all_dates - cached_dates
     
     # Log cache hit/miss information
