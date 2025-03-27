@@ -30,6 +30,7 @@ A web application that displays daily performance of stock indices and individua
 - Python 3.9+
 - Node.js 14+
 - News API key (from newsapi.org)
+- Together AI API key (optional, for enhanced sentiment analysis)
 
 ### Backend Setup
 
@@ -55,11 +56,20 @@ A web application that displays daily performance of stock indices and individua
    ```
 
 4. Create a `.env` file in the backend directory:
-   ```bash
-   # backend/.env
-   NEWS_API_KEY=your_api_key_here
    ```
-   Replace `your_api_key_here` with your actual API key from newsapi.org
+   # Required
+   NEWS_API_KEY=your_news_api_key_here
+   
+   # Optional - only needed for enhanced sentiment analysis
+   TOGETHER_API_KEY=your_together_api_key_here
+   
+   # Optional - defaults will work for local development
+   # DATABASE_URL=sqlite:///./stock_news.db
+   # MONGODB_URL=mongodb://localhost:27017
+   # MONGODB_DB=stocknews
+   # REDIS_URL=redis://localhost:6379
+   ```
+   Replace the placeholder values with your actual API keys.
 
 ### Frontend Setup
 
@@ -68,23 +78,56 @@ A web application that displays daily performance of stock indices and individua
    cd frontend
    ```
 
-2. Install dependencies:
+2. Install dependencies to create the node_modules folder:
    ```bash
    npm install
    ```
-   This will create the node_modules folder with all required dependencies
+   This will install all required dependencies specified in package.json.
 
-### Running the Application
+## Running the Application
 
-1. Start the backend server (from the backend directory):
+### Method 1: Using the Start Scripts
+
+The project includes Python scripts to easily start both the frontend and backend servers.
+
+1. Start the backend server:
    ```bash
+   # From the project root directory
+   python start_backend.py
+   ```
+   The backend API will be available at http://localhost:8000
+
+2. Start the frontend development server:
+   ```bash
+   # From the project root directory
+   python start_frontend.py
+   ```
+   The frontend application will be available at http://localhost:5173
+
+### Method 2: Manual Startup
+
+Alternatively, you can start the servers manually:
+
+1. Start the backend server:
+   ```bash
+   # Navigate to the backend directory
+   cd backend
+   
    # Make sure your virtual environment is activated
+   # On Windows: venv\Scripts\activate
+   # On macOS/Linux: source venv/bin/activate
+   
+   # Start the server
    uvicorn app.main:app --reload
    ```
    The API will be available at http://localhost:8000
 
-2. Start the frontend development server (from the frontend directory):
+2. Start the frontend development server:
    ```bash
+   # Navigate to the frontend directory
+   cd frontend
+   
+   # Start the development server
    npm run dev
    ```
    The application will be available at http://localhost:5173
@@ -93,11 +136,13 @@ A web application that displays daily performance of stock indices and individua
 
 1. Sign up for a free account at [newsapi.org](https://newsapi.org)
 2. After registration, get your API key from the dashboard
-3. Create a `.env` file in the backend directory if it doesn't exist
-4. Add your API key to the `.env` file:
-   ```
-   NEWS_API_KEY=your_api_key_here
-   ```
+3. Add your API key to the `.env` file in the backend directory
+
+### Getting a Together AI API Key (Optional)
+
+1. Sign up for an account at [together.ai](https://together.ai)
+2. After registration, get your API key from the dashboard
+3. Add your API key to the `.env` file in the backend directory
 
 ## Project Structure
 
