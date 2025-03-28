@@ -76,17 +76,28 @@ const Dashboard = () => {
 
   const getStockChange = (symbol) => {
     const stockPrices = prices[symbol]?.['7d'] || []
-    if (stockPrices.length >= 2) {
-      const latest = parseFloat(stockPrices[stockPrices.length - 1].close)
-      const previous = parseFloat(stockPrices[stockPrices.length - 2].close)
-      const change = ((latest - previous) / previous) * 100
-      return {
-        value: change.toFixed(2),
-        isPositive: change > 0,
-        color: change > 0 ? 'success.main' : change < 0 ? 'error.main' : 'text.secondary'
+    
+    // Find the last two valid data points with close values
+    let validPrices = stockPrices.filter(price => {
+      const closeValue = parseFloat(price.close);
+      return !isNaN(closeValue) && closeValue !== 0;
+    });
+    
+    if (validPrices.length >= 2) {
+      const latest = parseFloat(validPrices[validPrices.length - 1].close);
+      const previous = parseFloat(validPrices[validPrices.length - 2].close);
+      
+      // Both values should be valid at this point, but double-check anyway
+      if (!isNaN(latest) && !isNaN(previous) && previous !== 0) {
+        const change = ((latest - previous) / previous) * 100;
+        return {
+          value: change.toFixed(2),
+          isPositive: change > 0,
+          color: change > 0 ? 'success.main' : change < 0 ? 'error.main' : 'text.secondary'
+        };
       }
     }
-    return null
+    return null;
   }
 
   return (
@@ -104,6 +115,9 @@ const Dashboard = () => {
       <Paper elevation={0} sx={{ p: 3, mb: 6, borderRadius: 2 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: 500 }}>
           Today's Market Movers
+        </Typography>
+        <Typography variant="caption" sx={{ display: 'block', mb: 2, color: 'text.secondary' }}>
+          Note: Today's data is only available after market close. Percentages shown reflect changes between the last two available trading days.
         </Typography>
         <Carousel
           animation="slide"

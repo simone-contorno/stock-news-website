@@ -37,8 +37,8 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
     logger.info(f"Checking cached data for {symbol} with period {period}")
     cached_data = get_cached_stock_data(symbol, period)
     
-    # If we have all the data we need, return it immediately
-    if not cached_data["missing_dates"]:
+    # If we have all the data we need (no missing dates and no null values), return it immediately
+    if not cached_data["dates_needing_api_call"]:
         #logger.info(f"Using cached data for {symbol} with period {period} - No API call needed")
         #logger.info(f"Found {len(cached_data['data'])} data points in cache")
         return {
@@ -46,11 +46,13 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
             "data": cached_data["data"]
         }
     
-    # If we have missing dates, fetch only those from Yahoo Finance
-    logger.info(f"Found {len(cached_data['missing_dates'])} missing dates for {symbol}")
+    # If we have missing dates or dates with null values, fetch them from Yahoo Finance
+    logger.info(f"Found {len(cached_data['dates_needing_api_call'])} dates needing API call for {symbol} ({len(cached_data['missing_dates'])} missing, {len(cached_data['null_dates'])} with null values)")
     
-    # If we have some missing dates, fetch them from Yahoo Finance
-    if cached_data["missing_dates"]:
+    # If we have some dates needing API call, fetch them from Yahoo Finance
+    # Note: For the current day, Yahoo Finance only provides complete historical data after market close
+    # During trading hours, current day data may not be available or may be incomplete
+    if cached_data["dates_needing_api_call"]:
         for attempt in range(MAX_RETRIES):
             try:
                 # Calculate exponential backoff with jitter for retries
@@ -138,14 +140,14 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
                 new_data_points = []
                 not_available_dates = []
                 
-                # Convert missing_dates to a set for faster lookups
-                missing_dates_set = set(cached_data["missing_dates"])
+                # Convert dates_needing_api_call to a set for faster lookups
+                dates_needing_api_call_set = set(cached_data["dates_needing_api_call"])
                 
                 for index, row in hist.iterrows():
                     date_str = index.strftime("%Y-%m-%d")
                     
-                    # Only process dates that are in our missing dates list
-                    if date_str in missing_dates_set:
+                    # Process dates that are missing or have null values
+                    if date_str in dates_needing_api_call_set:
                         try:
                             data_point = {
                                 "timestamp": index.strftime("%Y-%m-%d %H:%M:%S"),
@@ -161,13 +163,13 @@ def get_stock_data(symbol: str, period: str = "7d") -> Dict:
                                 continue  # Skip invalid data points
                             
                             new_data_points.append(data_point)
-                            missing_dates_set.remove(date_str)  # Remove from missing set
+                            dates_needing_api_call_set.remove(date_str)  # Remove from set of dates needing API call
                         except (ValueError, TypeError) as e:
                             not_available_dates.append(date_str)
                             continue  # Skip malformed data points
                 
-                # Any dates still in missing_dates_set were not found in the API response
-                not_available_dates.extend(list(missing_dates_set))
+                # Any dates still in dates_needing_api_call_set were not found in the API response
+                not_available_dates.extend(list(dates_needing_api_call_set))
                 
                 # Store the new data points and mark not available dates in the database
                 if new_data_points or not_available_dates:

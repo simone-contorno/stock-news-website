@@ -162,22 +162,22 @@ async def get_stock_prices(symbol: str, period: str = "7d", db: Session = Depend
             # If we just updated the database, return the new prices
             return [{
                 "timestamp": price.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                "open": float(price.open),
-                "high": float(price.high),
-                "low": float(price.low),
-                "close": float(price.close),
-                "volume": int(price.volume)
+                "open": float(price.open) if price.open is not None else None,
+                "high": float(price.high) if price.high is not None else None,
+                "low": float(price.low) if price.low is not None else None,
+                "close": float(price.close) if price.close is not None else None,
+                "volume": int(price.volume) if price.volume is not None else None
             } for price in new_prices]
         else:
             # If we're using cached data without updating the database, query the prices
             prices = db.query(StockPrice).filter(StockPrice.stock_id == stock.id).all()
             return [{
                 "timestamp": price.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                "open": float(price.open),
-                "high": float(price.high),
-                "low": float(price.low),
-                "close": float(price.close),
-                "volume": int(price.volume)
+                "open": float(price.open) if price.open is not None else None,
+                "high": float(price.high) if price.high is not None else None,
+                "low": float(price.low) if price.low is not None else None,
+                "close": float(price.close) if price.close is not None else None,
+                "volume": int(price.volume) if price.volume is not None else None
             } for price in prices]
     except Exception as e:
         # If there's an error, check if we have existing prices in the database
@@ -186,11 +186,11 @@ async def get_stock_prices(symbol: str, period: str = "7d", db: Session = Depend
             # Use existing prices if available
             return [{
                 "timestamp": price.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                "open": float(price.open),
-                "high": float(price.high),
-                "low": float(price.low),
-                "close": float(price.close),
-                "volume": int(price.volume)
+                "open": float(price.open) if price.open is not None else None,
+                "high": float(price.high) if price.high is not None else None,
+                "low": float(price.low) if price.low is not None else None,
+                "close": float(price.close) if price.close is not None else None,
+                "volume": int(price.volume) if price.volume is not None else None
             } for price in prices]
         
         # If no data can be retrieved, raise an error

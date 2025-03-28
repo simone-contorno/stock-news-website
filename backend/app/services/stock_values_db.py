@@ -61,6 +61,8 @@ def ensure_stock_table_exists(symbol: str) -> None:
 def get_date_range_for_period(period: str) -> Tuple[datetime, datetime]:
     """
     Convert a period string to a start and end date.
+    Note: For current day data, Yahoo Finance only provides historical data after market close.
+    During trading hours, current day data may not be available through the historical API.
     """
     end_date = datetime.now()
     
@@ -123,6 +125,16 @@ def get_cached_stock_data(symbol: str, period: str) -> Dict:
         # Track dates with NULL values separately
         if row['close'] is None:
             null_dates.add(row['date'])
+            # Don't skip NULL values, instead set them to None so they can be filtered out by the frontend
+            data_point = {
+                "timestamp": f"{row['date']} 00:00:00",
+                "open": None,
+                "high": None,
+                "low": None,
+                "close": None,
+                "volume": 0
+            }
+            processed_data.append(data_point)
             continue
             
         data_point = {
@@ -145,17 +157,22 @@ def get_cached_stock_data(symbol: str, period: str) -> Dict:
     
     # Find truly missing dates (not in cache and not previously marked as unavailable)
     missing_dates = all_dates - cached_dates
-    
+
+    # Combine missing dates and null dates to determine if we need to make API calls
+    dates_needing_api_call = missing_dates.union(null_dates)
+
     # Log cache hit/miss information
-    if missing_dates:
-        logger.info(f"Cache PARTIAL HIT for {symbol} with period {period}: {len(processed_data)} cached points, {len(missing_dates)} missing dates")
+    if dates_needing_api_call:
+        logger.info(f"Cache PARTIAL HIT for {symbol} with period {period}: {len(processed_data)} cached points, {len(missing_dates)} missing dates, {len(null_dates)} null dates")
     else:
         logger.info(f"Cache COMPLETE HIT for {symbol} with period {period}: {len(processed_data)} cached points, no API call needed")
     
     return {
         "symbol": symbol,
         "data": processed_data,
-        "missing_dates": sorted(list(missing_dates))
+        "missing_dates": sorted(list(missing_dates)),
+        "null_dates": sorted(list(null_dates)),
+        "dates_needing_api_call": sorted(list(dates_needing_api_call))
     }
 
 def store_stock_data(symbol: str, data_points: List[Dict], not_available_dates: List[str] = None) -> None:

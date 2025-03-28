@@ -367,21 +367,23 @@ const StockDetail = () => {
     },
     series: [{
       name: symbol.replace('^', ''),
-      data: stockPrices ? stockPrices.map(price => {
-        // Parse the timestamp string to create a date object
-        const timestampParts = price.timestamp.split(' ')[0].split('-');
-        const year = parseInt(timestampParts[0]);
-        const month = parseInt(timestampParts[1]) - 1; // JavaScript months are 0-indexed
-        const day = parseInt(timestampParts[2]);
-        
-        // Create a date object with the exact year, month, and day
-        const date = new Date(year, month, day);
-        
-        return [
-          date.getTime(),
-          parseFloat(price.close)
-        ];
-      }).sort((a, b) => a[0] - b[0]) : [], // Keep data sorted by date
+      data: stockPrices ? stockPrices
+        .filter(price => price.close !== null) // Filter out null values
+        .map(price => {
+          // Parse the timestamp string to create a date object
+          const timestampParts = price.timestamp.split(' ')[0].split('-');
+          const year = parseInt(timestampParts[0]);
+          const month = parseInt(timestampParts[1]) - 1; // JavaScript months are 0-indexed
+          const day = parseInt(timestampParts[2]);
+          
+          // Create a date object with the exact year, month, and day
+          const date = new Date(year, month, day);
+          
+          return [
+            date.getTime(),
+            parseFloat(price.close)
+          ];
+        }).sort((a, b) => a[0] - b[0]) : [], // Keep data sorted by date
       color: '#0B3954',
       lineWidth: 2
     }],
